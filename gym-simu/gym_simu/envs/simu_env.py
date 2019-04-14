@@ -112,12 +112,12 @@ class SimuEnv(gym.Env):
         self.voiture.avance(action[1])
         print("Applying control. Steering: ", action[0], " Speed: ", action[1])
 
-        print("Entering simulator step")
+        # print("Entering simulator step")
 
         # Execute simulation
         self.simulator.do_simulation_step()
 
-        print("Exit simulator step")
+        # print("Exit simulator step")
 
         ####################################
         # Get rendered values from simulator
@@ -127,9 +127,9 @@ class SimuEnv(gym.Env):
 
         reward = self.get_reward()
 
-        episode_over = False
+        episode_over = self._check_collision_with_wall()
 
-        print ("Exiting step")
+        # print ("Exiting step")
 
         return ob, reward, episode_over, {}
 
@@ -191,6 +191,9 @@ class SimuEnv(gym.Env):
         gyro = "gyroZ"
         cam = simulator.get_handle("Vision_sensor")
         self.base_car = simulator.get_handle("base_link")
+        self.int_wall = simulator.get_handle("int_wall")
+        self.ext_wall = simulator.get_handle("ext_wall")
+        self.body_chassis = simulator.get_handle("body_chasis")
 
         self.speedController = SpeedController(simulator, [left_motor, right_motor],
                                         simulation_step_time=simulator.get_simulation_time_step(),
@@ -201,3 +204,41 @@ class SimuEnv(gym.Env):
         self.imageAnalyser = ImageAnalyser(simulator, cam)
 
         self.arduino = Arduino(simulator, gyro)
+
+    def _check_collision_with_wall(self):
+        # TODO replace body_chassis by base_car ?
+
+        # simxCheckCollision not working (crash when collision on NULL pointer)
+        # success1, collision1 = self.simulator.client.simxCheckCollision(self.int_wall, self.body_chassis, self.simulator.client.simxServiceCall())
+        # success2, collision2 = self.simulator.client.simxCheckCollision(self.ext_wall, self.body_chassis, self.simulator.client.simxServiceCall())
+        
+        list1 = self.simulator.client.simxCheckDistance(self.int_wall, self.body_chassis, 0.05,  self.simulator.client.simxServiceCall())
+        list2 = self.simulator.client.simxCheckDistance(self.ext_wall, self.body_chassis, 0.05,  self.simulator.client.simxServiceCall())
+
+        # simxCheckDistance has a weird behaviour: it returns lists of len 2 if distance > threshold, len 5 otherwise.
+        # Other issue: it returns success only if distance < threshold, otherwise other values are None.
+        # Thus we handle this.
+        if len(list1) == 2:
+            success1, collision1 = list1
+        elif len(list1) == 5:
+            success1, collision1, _, _, _ = list1
+        else:
+            success1 = False
+
+        if len(list2) == 2:
+            success2, collision2 = list2
+        elif len(list2) == 5:
+            success2, collision2, _, _, _ = list2
+        else:
+            success2 = False
+
+        # Get collision
+        collision = False
+        if success1:
+            collision = collision or collision1
+        if success2:
+            collision = collision or collision2
+
+        # print ("Collision: ", collision)
+
+        return collision
