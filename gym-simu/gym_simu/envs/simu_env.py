@@ -7,6 +7,8 @@ import numpy as np
 from Simulator import Simulator
 from FakeSpeedController import SpeedController
 from FakeVoiture import Voiture
+from FakeArduino import Arduino
+from FakeImageAnalyser import ImageAnalyser
 
 class SimuEnv(gym.Env):
     metadata = {'render.modes': ['human']}
@@ -23,20 +25,25 @@ class SimuEnv(gym.Env):
         left_motor = simulator.get_handle("driving_joint_rear_left")
         left_steering = simulator.get_handle("steering_joint_fl")
         right_steering = simulator.get_handle("steering_joint_fr")
-        self.gyro = "gyroZ"
-        self.cam = simulator.get_handle("Vision_sensor")
+        gyro = "gyroZ"
+        cam = simulator.get_handle("Vision_sensor")
         self.base_car = simulator.get_handle("base_link")
 
-        speedController = SpeedController(simulator, [left_motor, right_motor],
+        self.speedController = SpeedController(simulator, [left_motor, right_motor],
                                         simulation_step_time=simulator.get_simulation_time_step(),
                                         base_car=self.base_car)
         self.voiture = Voiture(simulator, [left_steering, right_steering], [left_motor, right_motor],
-                        speedController, )
+                        self.speedController, )
+
+        self.imageAnalyser = ImageAnalyser(simulator, cam)
+
+
+        self.arduino = Arduino(simulator, gyro)
 
         self.simulator.start_simulation()
 
         ###############################
-        # Create and init actions space
+        # Create actions space
         ###############################
 
         min_steering = -100.0
@@ -51,6 +58,23 @@ class SimuEnv(gym.Env):
 
         self.action_space = spaces.Box(low=min_action, high=max_action,
                                 dtype=np.float32)
+
+        ##############################
+        # Create observations space
+        ##############################
+
+        min_gyro = -180.0
+        max_gyro = 180.0
+        min_tacho = -50000.0
+        max_tacho = 50000.0
+        width = 320
+        height = 240
+
+        self.observation_space = spaces.Dict(dict(
+            gyro=spaces.Box(-min_gyro, max_gyro, shape=(1,), dtype='float32'),
+            tacho=spaces.Box(-min_tacho, max_tacho, shape=(1,), dtype='float32'),
+            imageLigne=spaces.Box(0, 255, shape=(height, width), dtype='uint8'),
+        ))
 
     def step(self, action):
         """
@@ -99,8 +123,30 @@ class SimuEnv(gym.Env):
 
         print("Exit simulator step")
 
+        ####################################
+        # Get rendered values from simulator
+        ####################################
+
+        # Execute arduino and speedController
+        components = [self.arduino, self.imageAnalyser, self.speedController]
+        for component in components:
+            component.execute()
+
+        # Get gyro
+        gyro_value = self.arduino.gyro
+
+        # Get tacho
+        tacho_value = self.speedController.get_tacho()
+
+        # Get camera image
+        image_ligne = self.imageAnalyser.get_image_ligne()
+
         reward = 0
-        ob = None
+        ob = dict(
+            gyro = gyro_value,
+            tacho = tacho_value,
+            imageLigne = image_ligne
+        )
         episode_over = False
         return ob, reward, episode_over, {}
 
