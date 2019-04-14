@@ -23,6 +23,22 @@ class Simulator:
         self.client.simxGetSimulationStepDone(self.client.simxDefaultSubscriber(self.simulation_step_done))
         self.running = True
 
+    def reset_simulation(self):
+        if self.running:
+            # self.client.simxRemoveObjects([object_to_reset], 1,  self.client.simxDefaultPublisher())
+            self.client.simxStopSimulation(self.client.simxServiceCall())
+            while(self.client.simxGetSimulationState(self.client.simxServiceCall())[1] != 0):
+                print ("Restarting simulation: waiting for simulation to stop")
+        
+        print("Simulation stopped: restarting")
+        # Restart
+        self.start_simulation()
+
+        while(self.client.simxGetSimulationState(self.client.simxServiceCall())[1] != 16):
+            print ("Restarting simulation: waiting for simulation to restart")
+        
+        print("Success: simulation restarted")
+
     def do_simulation_step(self):
         if not self.running:
             raise Exception("Simulation not running")
