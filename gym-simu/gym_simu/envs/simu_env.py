@@ -14,6 +14,10 @@ class SimuEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self):
+        # TODO remove these lines after creating real reward
+        self.old_tacho_value = 0
+        self.delta_tacho = 0
+
         ###########################
         # Create and init simulator
         ###########################
@@ -21,24 +25,13 @@ class SimuEnv(gym.Env):
         simulator = Simulator()
         self.simulator = simulator
 
-        right_motor = simulator.get_handle("driving_joint_rear_right")
-        left_motor = simulator.get_handle("driving_joint_rear_left")
-        left_steering = simulator.get_handle("steering_joint_fl")
-        right_steering = simulator.get_handle("steering_joint_fr")
-        gyro = "gyroZ"
-        cam = simulator.get_handle("Vision_sensor")
-        self.base_car = simulator.get_handle("base_link")
+        # Create robot control objects
+        self._create_robot_control_objects(self.simulator)
 
-        self.speedController = SpeedController(simulator, [left_motor, right_motor],
-                                        simulation_step_time=simulator.get_simulation_time_step(),
-                                        base_car=self.base_car)
-        self.voiture = Voiture(simulator, [left_steering, right_steering], [left_motor, right_motor],
-                        self.speedController, )
-
-        self.imageAnalyser = ImageAnalyser(simulator, cam)
-
-
-        self.arduino = Arduino(simulator, gyro)
+        # Execute arduino and speedController a first time
+        components = [self.arduino, self.imageAnalyser, self.speedController]
+        for component in components:
+            component.execute()
 
         self.simulator.start_simulation()
 
@@ -63,18 +56,18 @@ class SimuEnv(gym.Env):
         # Create observations space
         ##############################
 
-        min_gyro = -180.0
-        max_gyro = 180.0
-        min_tacho = -50000.0
-        max_tacho = 50000.0
-        width = 320
-        height = 240
+        self.min_gyro = -180.0
+        self.max_gyro = 180.0
+        self.min_tacho = -50000.0
+        self.max_tacho = 50000.0
+        self.width = 320
+        self.height = 240
 
-        self.observation_space = spaces.Dict(dict(
-            gyro=spaces.Box(-min_gyro, max_gyro, shape=(1,), dtype='float32'),
-            tacho=spaces.Box(-min_tacho, max_tacho, shape=(1,), dtype='float32'),
-            imageLigne=spaces.Box(0, 255, shape=(height, width), dtype='uint8'),
-        ))
+        # Observations are encoded that way:
+        # Channel 0: image
+        # Channel 1: all pixels = (gyro - min_gyro) * (max_gyro - min_gyro) * 255
+        # Channel 2: all pixels = (tacho - min_tacho) * (max_tacho - min_tacho) * 255
+        self.observation_space = spaces.Box(low=0.0, high=255.0, shape=(self.height, self.width, 3), dtype='float32')
 
     def step(self, action):
         """
@@ -111,7 +104,10 @@ class SimuEnv(gym.Env):
         # ob = self.env.getState()
         # episode_over = self.status != hfo_py.IN_GAME
 
-        # Take action
+        ##############################
+        # Send action to simulator
+        ##############################
+
         self.voiture.tourne(action[0])
         self.voiture.avance(action[1])
         print("Applying control. Steering: ", action[0], " Speed: ", action[1])
@@ -127,31 +123,25 @@ class SimuEnv(gym.Env):
         # Get rendered values from simulator
         ####################################
 
-        # Execute arduino and speedController
-        components = [self.arduino, self.imageAnalyser, self.speedController]
-        for component in components:
-            component.execute()
+        ob = self._get_obs()
 
-        # Get gyro
-        gyro_value = self.arduino.gyro
+        reward = self.get_reward()
 
-        # Get tacho
-        tacho_value = self.speedController.get_tacho()
-
-        # Get camera image
-        image_ligne = self.imageAnalyser.get_image_ligne()
-
-        reward = 0
-        ob = dict(
-            gyro = gyro_value,
-            tacho = tacho_value,
-            imageLigne = image_ligne
-        )
         episode_over = False
+
+        print ("Exiting step")
+
         return ob, reward, episode_over, {}
 
     def reset(self):
+        # Reset simulation
         self.simulator.reset_simulation()
+
+        # Reset robot control objects
+        self._create_robot_control_objects(self.simulator)
+
+        obs = self._get_obs()
+        return obs
 
     def close(self):
         self.simulator.stop_simulation()
@@ -161,9 +151,53 @@ class SimuEnv(gym.Env):
 
     def get_reward(self):
         """ Reward is given for XY. """
-        if self.status == FOOBAR:
-            return 1
-        elif self.status == ABC:
-            return self.somestate ** 2
-        else:
-            return 0
+        # TODO create real reward
+        return self.delta_tacho
+
+    def _get_obs(self):
+        # Execute arduino and speedController
+        components = [self.arduino, self.imageAnalyser, self.speedController]
+        for component in components:
+            component.execute()
+
+        # Get gyro
+        gyro_value = self.arduino.gyro
+        gyro_matrix = np.ones((self.height, self.width), dtype='float32') * (gyro_value - self.min_gyro) / (self.max_gyro - self.min_gyro) * 255
+
+        # Get tacho
+        tacho_value = self.speedController.get_tacho()
+        tacho_matrix = np.ones((self.height, self.width), dtype='float32') * (tacho_value - self.min_tacho) / (self.max_tacho - self.min_tacho) * 255
+
+        # TODO remove this and replace by real reward
+        self.delta_tacho = tacho_value - self.old_tacho_value
+        self.old_tacho_value = tacho_value
+
+        # Get camera image
+        image_ligne = self.imageAnalyser.get_image_ligne()
+
+        # Put observations in a tensor
+        ob = np.zeros((self.height, self.width, 3))
+        ob[..., 0] = image_ligne
+        ob[..., 1] = gyro_matrix
+        ob[..., 2] = tacho_matrix
+
+        return ob
+
+    def _create_robot_control_objects(self, simulator):
+        right_motor = simulator.get_handle("driving_joint_rear_right")
+        left_motor = simulator.get_handle("driving_joint_rear_left")
+        left_steering = simulator.get_handle("steering_joint_fl")
+        right_steering = simulator.get_handle("steering_joint_fr")
+        gyro = "gyroZ"
+        cam = simulator.get_handle("Vision_sensor")
+        self.base_car = simulator.get_handle("base_link")
+
+        self.speedController = SpeedController(simulator, [left_motor, right_motor],
+                                        simulation_step_time=simulator.get_simulation_time_step(),
+                                        base_car=self.base_car)
+        self.voiture = Voiture(simulator, [left_steering, right_steering], [left_motor, right_motor],
+                        self.speedController, )
+
+        self.imageAnalyser = ImageAnalyser(simulator, cam)
+
+        self.arduino = Arduino(simulator, gyro)
