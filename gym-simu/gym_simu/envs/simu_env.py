@@ -2,6 +2,8 @@ import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
 
+import numpy as np
+
 from Simulator import Simulator
 from FakeSpeedController import SpeedController
 from FakeVoiture import Voiture
@@ -10,6 +12,10 @@ class SimuEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self):
+        ###########################
+        # Create and init simulator
+        ###########################
+
         simulator = Simulator()
         self.simulator = simulator
 
@@ -28,6 +34,23 @@ class SimuEnv(gym.Env):
                         speedController, )
 
         self.simulator.start_simulation()
+
+        ###############################
+        # Create and init actions space
+        ###############################
+
+        min_steering = -100.0
+        max_steering = 100.0
+        min_speed = -100.0
+        max_speed = 100.0
+
+        min_action = np.array([min_steering, min_speed])
+        max_action = np.array([max_steering, max_speed])
+
+        self.viewer = None
+
+        self.action_space = spaces.Box(low=min_action, high=max_action,
+                                dtype=np.float32)
 
     def step(self, action):
         """
@@ -65,8 +88,9 @@ class SimuEnv(gym.Env):
         # episode_over = self.status != hfo_py.IN_GAME
 
         # Take action
-        self.voiture.avance(20)
-        self.voiture.tourne(10)
+        self.voiture.tourne(action[0])
+        self.voiture.avance(action[1])
+        print("Applying control. Steering: ", action[0], " Speed: ", action[1])
 
         print("Entering simulator step")
 
