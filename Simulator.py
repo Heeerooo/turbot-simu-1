@@ -1,5 +1,6 @@
 import Config
 import b0RemoteApi
+import time
 
 JOINT_VELOCITY_PARAMETER = 2012
 
@@ -18,17 +19,28 @@ class Simulator:
         self.running = False
 
     def start_simulation(self):
-        self.client.simxSynchronous(True)
-        self.client.simxStartSimulation(self.client.simxDefaultPublisher())
-        self.client.simxGetSimulationStepDone(self.client.simxDefaultSubscriber(self.simulation_step_done))
+        try:
+            self.client.simxSynchronous(True)
+            self.client.simxStartSimulation(self.client.simxDefaultPublisher())
+            self.client.simxGetSimulationStepDone(self.client.simxDefaultSubscriber(self.simulation_step_done))
+        except:
+            # In case of issue in start simulation, retry
+            print("Warning: start_simulation failure. Retrying...")
+            time.sleep(3)   # Wait 3 seconds
+            self.start_simulation()
         self.running = True
 
     def reset_simulation(self):
         if self.running:
             # self.client.simxRemoveObjects([object_to_reset], 1,  self.client.simxDefaultPublisher())
-            self.client.simxStopSimulation(self.client.simxServiceCall())
-            while(self.client.simxGetSimulationState(self.client.simxServiceCall())[1] != 0):
-                print ("Restarting simulation: waiting for simulation to stop")
+            try:
+                self.client.simxStopSimulation(self.client.simxServiceCall())
+                while(self.client.simxGetSimulationState(self.client.simxServiceCall())[1] != 0):
+                    print ("Restarting simulation: waiting for simulation to stop")
+            except:
+                print("Warning: failed to reset simulation. Retrying...")
+                time.sleep(3)
+                self.reset_simulation()
         
         print("Simulation stopped: restarting")
         # Restart
