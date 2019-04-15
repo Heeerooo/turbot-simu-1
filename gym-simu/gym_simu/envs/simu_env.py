@@ -44,10 +44,12 @@ class SimuEnv(gym.Env):
         self.max_steering = 100.0
         self.min_speed = 0
         self.max_speed = 100.0
-        self.coeff_action = 1.0 # Multiplier (to adapt order of magnitude of actions)
+        self.coeff_action_steering = 1.0 # Multiplier (to adapt order of magnitude of actions)
+        self.coeff_action_speed = 2 # Multiplier (to adapt order of magnitude of actions)
+        self.center_speed = 50.0    # Medium speed
 
-        min_action = np.array([self.min_steering, self.min_speed]) * self.coeff_action
-        max_action = np.array([self.max_steering, self.max_speed]) * self.coeff_action
+        min_action = np.array([self.min_steering * self.coeff_action_steering, (self.min_speed-self.center_speed) * self.coeff_action_speed])
+        max_action = np.array([self.max_steering * self.coeff_action_steering, (self.max_speed-self.center_speed) * self.coeff_action_speed])
 
         self.viewer = None
 
@@ -110,8 +112,8 @@ class SimuEnv(gym.Env):
         # Send action to simulator
         ##############################
 
-        steering = action[0] / self.coeff_action
-        speed = action[1] / self.coeff_action
+        steering = action[0] / self.coeff_action_steering
+        speed = (action[1] + self.center_speed) / self.coeff_action_speed
         self.voiture.tourne(np.clip(steering, self.min_steering, self.max_steering))
         self.voiture.avance(np.clip(speed, self.min_speed, self.max_speed))
         print("\nApplying control. Steering: ", steering, " Speed: ", speed)
