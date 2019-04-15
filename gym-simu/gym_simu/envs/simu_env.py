@@ -39,13 +39,13 @@ class SimuEnv(gym.Env):
         # Create actions space
         ###############################
 
-        min_steering = -100.0
-        max_steering = 100.0
-        min_speed = -100.0
-        max_speed = 100.0
+        self.min_steering = -100.0
+        self.max_steering = 100.0
+        self.min_speed = 0.0
+        self.max_speed = 100.0
 
-        min_action = np.array([min_steering, min_speed])
-        max_action = np.array([max_steering, max_speed])
+        min_action = np.array([self.min_steering, self.min_speed])
+        max_action = np.array([self.max_steering, self.max_speed])
 
         self.viewer = None
 
@@ -108,8 +108,8 @@ class SimuEnv(gym.Env):
         # Send action to simulator
         ##############################
 
-        self.voiture.tourne(action[0])
-        self.voiture.avance(action[1])
+        self.voiture.tourne(np.clip(action[0], self.min_steering, self.max_steering))
+        self.voiture.avance(np.clip(action[1], self.min_speed, self.max_speed))
         print("Applying control. Steering: ", action[0], " Speed: ", action[1])
 
         # print("Entering simulator step")
@@ -212,8 +212,12 @@ class SimuEnv(gym.Env):
         # success1, collision1 = self.simulator.client.simxCheckCollision(self.int_wall, self.body_chassis, self.simulator.client.simxServiceCall())
         # success2, collision2 = self.simulator.client.simxCheckCollision(self.ext_wall, self.body_chassis, self.simulator.client.simxServiceCall())
         
-        list1 = self.simulator.client.simxCheckDistance(self.int_wall, self.body_chassis, 0.05,  self.simulator.client.simxServiceCall())
-        list2 = self.simulator.client.simxCheckDistance(self.ext_wall, self.body_chassis, 0.05,  self.simulator.client.simxServiceCall())
+        try:
+            list1 = self.simulator.client.simxCheckDistance(self.int_wall, self.body_chassis, 0.05,  self.simulator.client.simxServiceCall())
+            list2 = self.simulator.client.simxCheckDistance(self.ext_wall, self.body_chassis, 0.05,  self.simulator.client.simxServiceCall())
+        except:
+            print("Warning: cannot compute distance to walls")
+            return False
 
         # simxCheckDistance has a weird behaviour: it returns lists of len 2 if distance > threshold, len 5 otherwise.
         # Other issue: it returns success only if distance < threshold, otherwise other values are None.
