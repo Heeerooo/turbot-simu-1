@@ -42,9 +42,9 @@ class SimuEnv(gym.Env):
 
         self.min_steering = -100.0
         self.max_steering = 100.0
-        self.min_speed = 0.0
+        self.min_speed = 0
         self.max_speed = 100.0
-        self.coeff_action = 10 # Multiplier (because range of model is more like 10000 than 100)
+        self.coeff_action = 1.0 # Multiplier (to adapt order of magnitude of actions)
 
         min_action = np.array([self.min_steering, self.min_speed]) * self.coeff_action
         max_action = np.array([self.max_steering, self.max_speed]) * self.coeff_action
