@@ -22,12 +22,13 @@ class Simulator:
         try:
             self.client.simxSynchronous(True)
             self.client.simxStartSimulation(self.client.simxDefaultPublisher())
-            self.client.simxGetSimulationStepDone(self.client.simxDefaultSubscriber(self.simulation_step_done))
         except:
             # In case of issue in start simulation, retry
-            print("Warning: start_simulation failure. Retrying...")
+            print("Warning: start_simulation failure.")
             time.sleep(3)   # Wait 3 seconds
-            self.start_simulation()
+            # self.start_simulation()
+
+        self.client.simxGetSimulationStepDone(self.client.simxDefaultSubscriber(self.simulation_step_done))
         self.running = True
 
     def reset_simulation(self):
@@ -38,9 +39,9 @@ class Simulator:
                 while(self.client.simxGetSimulationState(self.client.simxServiceCall())[1] != 0):
                     print ("Restarting simulation: waiting for simulation to stop")
             except:
-                print("Warning: failed to reset simulation. Retrying...")
+                print("Warning: failed to reset simulation.")
                 time.sleep(3)
-                self.reset_simulation()
+                # self.reset_simulation()
         
         print("Simulation stopped: restarting")
         # Restart
