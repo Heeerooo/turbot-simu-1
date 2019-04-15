@@ -113,6 +113,13 @@ class SimuEnv(gym.Env):
         self.voiture.avance(np.clip(action[1], self.min_speed, self.max_speed))
         print("Applying control. Steering: ", action[0], " Speed: ", action[1])
 
+        # Compute penalty if actions are out of action space
+        self.action_penalty = 0.0
+        self.action_penalty -= max(action[0] - self.max_steering, 0)
+        self.action_penalty -= max(-action[0] + self.min_steering, 0)
+        self.action_penalty -= max(action[1] - self.max_speed, 0)
+        self.action_penalty -= max(-action[1] + self.min_speed, 0)       
+
         # print("Entering simulator step")
 
         # Execute simulation
@@ -167,7 +174,11 @@ class SimuEnv(gym.Env):
             return 0.0
         reward = current_pos - self.last_current_pos
         self.last_current_pos = current_pos
-        print ("Reward : ", reward)
+        # Add a constant penalty for each step (to minimize number of steps)
+        reward -= 0.1
+        # Add the action penalty if actions are out of action space
+        reward += self.action_penalty
+        print ("\nReward: ", reward, "Action penalty: ", self.action_penalty)
         return reward
 
 
