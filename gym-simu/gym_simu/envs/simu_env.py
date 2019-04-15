@@ -17,6 +17,7 @@ class SimuEnv(gym.Env):
         # TODO remove these lines after creating real reward
         self.old_tacho_value = 0
         self.delta_tacho = 0
+        self.last_current_pos = None
 
         ###########################
         # Create and init simulator
@@ -129,6 +130,10 @@ class SimuEnv(gym.Env):
 
         episode_over = self._check_collision_with_wall()
 
+        # Penalize the reward when hitting a wall
+        if episode_over:
+            reward -= 100.0
+
         # print ("Exiting step")
 
         return ob, reward, episode_over, {}
@@ -152,7 +157,19 @@ class SimuEnv(gym.Env):
     def get_reward(self):
         """ Reward is given for XY. """
         # TODO create real reward
-        return self.delta_tacho
+        # return self.delta_tacho - 1.0
+        current_pos = self.simulator.get_object_position(self.base_car)
+        if current_pos is None:
+            return 0.0
+        current_pos = np.array(current_pos)[1]
+        if self.last_current_pos is None:
+            self.last_current_pos = current_pos
+            return 0.0
+        reward = current_pos - self.last_current_pos
+        self.last_current_pos = current_pos
+        print ("Reward : ", reward)
+        return reward
+
 
     def _get_obs(self):
         # Execute arduino and speedController
@@ -212,6 +229,7 @@ class SimuEnv(gym.Env):
         # success1, collision1 = self.simulator.client.simxCheckCollision(self.int_wall, self.body_chassis, self.simulator.client.simxServiceCall())
         # success2, collision2 = self.simulator.client.simxCheckCollision(self.ext_wall, self.body_chassis, self.simulator.client.simxServiceCall())
         
+        # Added try/catch because sometimes it crashes. TODO: understand why
         try:
             list1 = self.simulator.client.simxCheckDistance(self.int_wall, self.body_chassis, 0.05,  self.simulator.client.simxServiceCall())
             list2 = self.simulator.client.simxCheckDistance(self.ext_wall, self.body_chassis, 0.05,  self.simulator.client.simxServiceCall())
