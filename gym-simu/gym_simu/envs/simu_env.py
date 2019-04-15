@@ -44,7 +44,7 @@ class SimuEnv(gym.Env):
         self.max_steering = 100.0
         self.min_speed = 0.0
         self.max_speed = 100.0
-        self.coeff_action = 100 # Multiplier (because range of model is more like 10000 than 100)
+        self.coeff_action = 1000 # Multiplier (because range of model is more like 10000 than 100)
 
         min_action = np.array([self.min_steering, self.min_speed]) * self.coeff_action
         max_action = np.array([self.max_steering, self.max_speed]) * self.coeff_action
@@ -110,18 +110,19 @@ class SimuEnv(gym.Env):
         # Send action to simulator
         ##############################
 
-        steering = action[0] / 100
-        speed = action[1] / 100
+        steering = action[0] / self.coeff_action
+        speed = action[1] / self.coeff_action
         self.voiture.tourne(np.clip(steering, self.min_steering, self.max_steering))
         self.voiture.avance(np.clip(speed, self.min_speed, self.max_speed))
-        print("\nApplying control. Steering: ", action[0], " Speed: ", action[1])
+        print("\nApplying control. Steering: ", steering, " Speed: ", speed)
 
         # Compute penalty if actions are out of action space
         self.action_penalty = 0.0
-        self.action_penalty -= max(steering - self.max_steering, 0)
-        self.action_penalty -= max(-steering + self.min_steering, 0)
-        self.action_penalty -= max(speed - self.max_speed, 0)
-        self.action_penalty -= max(-speed + self.min_speed, 0)       
+        action_penalty_coeff = 100000
+        self.action_penalty -= max(steering - self.max_steering, 0) / action_penalty_coeff
+        self.action_penalty -= max(-steering + self.min_steering, 0) / action_penalty_coeff
+        self.action_penalty -= max(speed - self.max_speed, 0) / action_penalty_coeff
+        self.action_penalty -= max(-speed + self.min_speed, 0) / action_penalty_coeff 
 
         # print("Entering simulator step")
 
@@ -181,6 +182,7 @@ class SimuEnv(gym.Env):
         reward -= 0.1
         # Add the action penalty if actions are out of action space
         reward += self.action_penalty
+        reward *= 100 # Change order of magnitude of reward
         print ("Reward: ", reward, "Action penalty: ", self.action_penalty)
         return reward
 
