@@ -44,7 +44,7 @@ class SimuEnv(gym.Env):
         self.max_steering = 100.0
         self.min_speed = 0.0
         self.max_speed = 100.0
-        self.coeff_action = 1000 # Multiplier (because range of model is more like 10000 than 100)
+        self.coeff_action = 10 # Multiplier (because range of model is more like 10000 than 100)
 
         min_action = np.array([self.min_steering, self.min_speed]) * self.coeff_action
         max_action = np.array([self.max_steering, self.max_speed]) * self.coeff_action
@@ -118,7 +118,7 @@ class SimuEnv(gym.Env):
 
         # Compute penalty if actions are out of action space
         self.action_penalty = 0.0
-        action_penalty_coeff = 100000
+        action_penalty_coeff = 20000
         self.action_penalty -= max(steering - self.max_steering, 0) / action_penalty_coeff
         self.action_penalty -= max(-steering + self.min_steering, 0) / action_penalty_coeff
         self.action_penalty -= max(speed - self.max_speed, 0) / action_penalty_coeff
