@@ -26,6 +26,8 @@ from keras.models import Sequential, Model
 from keras.layers import Dense, Activation, Flatten, Input, Concatenate
 from keras.optimizers import Adam
 
+from keras.callbacks import ModelCheckpoint
+
 from rl.agents import DDPGAgent
 from rl.memory import SequentialMemory
 from rl.random import OrnsteinUhlenbeckProcess
@@ -80,10 +82,14 @@ agent = DDPGAgent(nb_actions=nb_actions, actor=actor, critic=critic, critic_acti
                   random_process=random_process, gamma=.99, target_model_update=1e-3)
 agent.compile(Adam(lr=.001, clipnorm=1.), metrics=['mae'])
 
+checkPoint = ModelCheckpoint("../checkPoints/weights.{epoch:06d}.hdf5",
+                            verbose=0, save_best_only=False,
+                            save_weights_only=True, period=1000)
+
 # Okay, now it's time to learn something! We visualize the training here for show, but this
 # slows down training quite a lot. You can always safely abort the training prematurely using
 # Ctrl + C.
-agent.fit(env, nb_steps=50000, visualize=False, verbose=1, nb_max_episode_steps=100)
+agent.fit(env, nb_steps=50000, visualize=False, verbose=1, nb_max_episode_steps=200, callbacks=[checkPoint])
 
 # After training is done, we save the final weights.
 agent.save_weights('ddpg_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
