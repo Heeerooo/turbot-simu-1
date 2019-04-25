@@ -19,6 +19,10 @@ class Logger:
     def log(self):
         print("tacho : %s" % self.tachometer.get_tacho())
         print("Simu time : %fs " % self.time.time())
-        # print("orientation : %s" % str(self.simulator.get_object_orientation(self.handles["base_car"])))
+        print("orientation : %s" % str(self.simulator.get_object_orientation(self.handles["base_car"])))
+        print("position left wheel: %s" % str(self.simulator.get_object_position(self.handles["left_steering"])))
+        print("position right wheel: %s" % str(self.simulator.get_object_position(self.handles["right_steering"])))
+        print("orientation left wheel: %s" % str(self.simulator.get_object_orientation(self.handles["left_steering"])))
+        print("orientation right wheel: %s" % str(self.simulator.get_object_orientation(self.handles["right_steering"])))
 
 

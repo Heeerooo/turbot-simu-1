@@ -12,7 +12,7 @@ from robot.SpeedController import SpeedController
 from robot.Tachometer import Tachometer
 from robot.Time import Time
 
-simulation_duration_seconds = 10
+simulation_duration_seconds = 30
 
 simulator = Simulator()
 

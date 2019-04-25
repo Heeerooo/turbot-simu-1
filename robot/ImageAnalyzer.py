@@ -2,7 +2,7 @@
 import cv2
 import numpy as np
 
-from Config import CAMERA_DELAY
+from robot.Config import CAMERA_DELAY
 
 
 class ImageAnalyzer:
@@ -78,7 +78,7 @@ class ImageAnalyzer:
 
         # Get contours
         _, thresh = cv2.threshold(int_mat, self.MIN_THRESHOLD_CONTOUR, self.MAX_VALUE_CONTOUR, 0)
-        _, contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
         if len(contours) == 0:
             # No contours, no need to remove anything
