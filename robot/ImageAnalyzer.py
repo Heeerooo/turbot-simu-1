@@ -14,6 +14,7 @@ class ImageAnalyzer:
     X_INFERENCE_POINT_1 = 100  # Point depuis le haut de l'image pris pour calculer l'ecart par rapport a la ligne
     X_INFERENCE_POINT_2 = 150  # Point depuis le haut de l'image pris pour calculer l'ecart par rapport a la ligne
     WIDTH = 320
+    HEIGHT = 240
     SAVE_TO_FILENAME = "/tmp_ram/imageAnalysisResult.json"
     LOG_EVERY_N_IMAGES = 20  # Loggue les images toutes les N
     LOG_BUFFER_SIZE = 10  # Taille du buffer (nombre d'images enregistrees dans un fichier)
@@ -48,17 +49,24 @@ class ImageAnalyzer:
         self.cam_handle = cam_handle
         self.simulator = simulator
 
+        # Initialize image_ligne with empty image
+        self.image_ligne = np.zeros((self.HEIGHT, self.WIDTH), dtype=np.uint8)
+
     def execute(self):
         resolution, byte_array_image_string = self.simulator.get_gray_image(self.cam_handle, CAMERA_DELAY)
         if resolution is None and byte_array_image_string is None:
             return
         mask0 = self.convert_image_to_numpy(byte_array_image_string, resolution)
         mask0 = self.clean_mask(mask0)
+        self.image_ligne = mask0
         self.position_ligne_1, self.position_ligne_2, poly_coeff = self.get_ecart_ligne(mask0)
         if poly_coeff is not None:
             self.poly_coeff_square = poly_coeff[0]
         else:
             self.poly_coeff_square = None
+
+    def get_image_ligne(self):
+        return self.image_ligne
 
     def convert_image_to_numpy(self, byte_array_image_string, resolution):
         return np.flipud(np.fromstring(byte_array_image_string, dtype=np.uint8).reshape(resolution[::-1]))
