@@ -1,5 +1,3 @@
-import time
-
 import gym
 import numpy as np
 from gym import spaces
@@ -16,6 +14,12 @@ class SimuEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self):
+        self.speed_controller = None
+        self.image_analyzer = None
+        self.tachometer = None
+        self.gyro = None
+        self.car = None
+
         # TODO remove these lines after creating real reward
         self.old_tacho_value = 0
         self.delta_tacho = 0
@@ -40,7 +44,7 @@ class SimuEnv(gym.Env):
         self.gyro_name = "gyroZ"
 
         # Create robot control objects
-        self._create_robot_control_objects()
+        self._recreate_components()
 
         self.simulator.start_simulation()
 
@@ -166,10 +170,8 @@ class SimuEnv(gym.Env):
         print("reset")
         # Reset simulation
         self.simulator.teleport_to_start_pos()
-
-        time.sleep(1)
         # Create robot control objects
-        self._create_robot_control_objects()
+        self._recreate_components()
 
         obs = self._get_obs()
         return obs
@@ -207,15 +209,9 @@ class SimuEnv(gym.Env):
         for component in components:
             component.execute()
 
-        # Get gyro
-        gyro_value = self.gyro.get_cap()
-        gyro_matrix = np.ones((self.height, self.width), dtype='float32') * (gyro_value - self.min_gyro) / (
-                self.max_gyro - self.min_gyro) * 255
+        gyro_matrix = self.get_gyro()
 
-        # Get tacho
-        tacho_value = self.tachometer.get_tacho()
-        tacho_matrix = np.ones((self.height, self.width), dtype='float32') * (tacho_value - self.min_tacho) / (
-                self.max_tacho - self.min_tacho) * 255
+        tacho_matrix, tacho_value = self.get_tacho()
 
         # TODO remove this and replace by real reward
         self.delta_tacho = tacho_value - self.old_tacho_value
@@ -232,7 +228,19 @@ class SimuEnv(gym.Env):
 
         return ob
 
-    def _create_robot_control_objects(self):
+    def get_gyro(self):
+        gyro_value = self.gyro.get_cap()
+        gyro_matrix = np.ones((self.height, self.width), dtype='float32') * (gyro_value - self.min_gyro) / (
+                self.max_gyro - self.min_gyro) * 255
+        return gyro_matrix
+
+    def get_tacho(self):
+        tacho_value = self.tachometer.get_tacho()
+        tacho_matrix = np.ones((self.height, self.width), dtype='float32') * (tacho_value - self.min_tacho) / (
+                self.max_tacho - self.min_tacho) * 255
+        return tacho_matrix, tacho_value
+
+    def _recreate_components(self):
 
         self.speed_controller = SpeedController(simulator=self.simulator,
                                                 motor_handles=[self.handles["left_motor"], self.handles["right_motor"]],
