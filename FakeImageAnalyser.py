@@ -3,6 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import cv2
 
+from keras.models import load_model
 
 class ImageAnalyser:
     # Constantes
@@ -44,12 +45,39 @@ class ImageAnalyser:
     position_ligne_2 = 0.
     poly_coeff_square = None
 
+    # Parameters for encoding line image in features
+    nb_features_encoding = 8  # Nb of features in output of encoder
+    model_path = '../deep-learning-model/encoder_8_feats.h5'
+    encoder_input_width = 384
+    encoder_input_height = 256
+
+
     def __init__(self, simulator, cam_handle):
         self.cam_handle = cam_handle
         self.simulator = simulator
 
         # Initialize image_ligne with empty image
         self.image_ligne = np.zeros((self.HEIGHT, self.WIDTH), dtype=np.uint8)
+
+        # Load model for encoding line images into features
+        self.encoder_model = load_model(self.model_path)
+
+    def get_nb_features_encoding(self):
+        return self.nb_features_encoding
+
+    def encode_image_ligne(self, image):
+        input_height = image.shape[0]
+        input_width = image.shape[1]
+        padding_height = (self.encoder_input_height - input_height) // 2
+        padding_width = (self.encoder_input_width - input_width) // 2
+
+        image_padded = np.zeros((1, self.encoder_input_height, self.encoder_input_width), dtype=np.float32)
+        image_padded[0, padding_height:-padding_height, padding_width:-padding_width] = image
+        image_padded = image_padded / 255.0
+
+        encoded = self.encoder_model.predict(image_padded)[0]
+
+        return encoded
 
     def execute(self):
         resolution, byte_array_image_string = self.simulator.get_gray_image(self.cam_handle)
@@ -58,6 +86,7 @@ class ImageAnalyser:
         mask0 = self.convert_image_to_numpy(byte_array_image_string, resolution)
         mask0 = self.clean_mask(mask0)
         self.image_ligne = mask0
+
         self.position_ligne_1, self.position_ligne_2, poly_coeff = self.get_ecart_ligne(mask0)
         if poly_coeff is not None:
             self.poly_coeff_square = poly_coeff[0]
@@ -185,8 +214,3 @@ class ImageAnalyser:
 
     def unlockObstacle(self):
         pass
-
-        # Tells if a new image has arrived
-
-    def isThereANewImage(self):
-        return True

@@ -38,8 +38,8 @@ ENV_NAME = 'simu-v0'
 
 # Get the environment and extract the number of actions.
 env = gym.make(ENV_NAME)
-np.random.seed(121)
-env.seed(121)
+np.random.seed(124)
+env.seed(125)
 assert len(env.action_space.shape) == 1
 nb_actions = env.action_space.shape[0]
 
@@ -76,7 +76,7 @@ print(critic.summary())
 # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
 # even the metrics!
 memory = SequentialMemory(limit=100000, window_length=1)
-random_process = OrnsteinUhlenbeckProcess(size=nb_actions, theta=0.0, mu=0, sigma=20)
+random_process = OrnsteinUhlenbeckProcess(size=nb_actions, theta=0.0, mu=0.0, sigma=0.00001)
 agent = DDPGAgent(nb_actions=nb_actions, actor=actor, critic=critic, critic_action_input=action_input,
                   memory=memory, nb_steps_warmup_critic=1000, nb_steps_warmup_actor=1000,
                   random_process=random_process, gamma=.99, target_model_update=1e-3)

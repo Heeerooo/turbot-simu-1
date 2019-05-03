@@ -29,12 +29,12 @@ class SimuEnv(gym.Env):
         # Create robot control objects
         self._create_robot_control_objects(self.simulator)
 
+        self.simulator.start_simulation()
+
         # Execute arduino and speedController a first time
         components = [self.arduino, self.imageAnalyser, self.speedController]
         for component in components:
             component.execute()
-
-        self.simulator.start_simulation()
 
         ###############################
         # Create actions space
@@ -45,7 +45,7 @@ class SimuEnv(gym.Env):
         self.min_speed = 0
         self.max_speed = 100.0
         self.coeff_action_steering = 1.0 # Multiplier (to adapt order of magnitude of actions)
-        self.coeff_action_speed = 2 # Multiplier (to adapt order of magnitude of actions)
+        self.coeff_action_speed = 2.0 # Multiplier (to adapt order of magnitude of actions)
         self.center_speed = 50.0    # Medium speed
 
         min_action = np.array([self.min_steering * self.coeff_action_steering, (self.min_speed-self.center_speed) * self.coeff_action_speed])
@@ -67,11 +67,13 @@ class SimuEnv(gym.Env):
         self.width = 320
         self.height = 240
 
+        self.nb_features = self.imageAnalyser.get_nb_features_encoding()  # Nb of features in the output of encoder
+
         # Observations are encoded that way:
-        # Channel 0: image
-        # Channel 1: all pixels = (gyro - min_gyro) * (max_gyro - min_gyro) * 255
-        # Channel 2: all pixels = (tacho - min_tacho) * (max_tacho - min_tacho) * 255
-        self.observation_space = spaces.Box(low=0.0, high=255.0, shape=(self.height, self.width, 3), dtype='float32')
+        # channel 0: (gyro - min_gyro) * (max_gyro - min_gyro) * 100 - 50
+        # channel 1: (tacho - min_tacho) * (max_tacho - min_tacho) * 100 - 50
+        # channels 2 to 2+nb_features : image encoded in nb_features by an encoder
+        self.observation_space = spaces.Box(low=-50.0, high=50.0, shape=(2 + self.nb_features,), dtype='float32')
 
     def step(self, action):
         """
@@ -130,6 +132,7 @@ class SimuEnv(gym.Env):
 
         # Execute simulation
         self.simulator.do_simulation_step()
+        self.simulator.get_simulation_time()   # Increment simulation time *** TODO put this in do_simulation_step?
 
         # print("Exit simulator step")
 
@@ -197,11 +200,11 @@ class SimuEnv(gym.Env):
 
         # Get gyro
         gyro_value = self.arduino.gyro
-        gyro_matrix = np.ones((self.height, self.width), dtype='float32') * (gyro_value - self.min_gyro) / (self.max_gyro - self.min_gyro) * 255
+        gyro_value =  (gyro_value - self.min_gyro) / (self.max_gyro - self.min_gyro) * 100 - 50
 
         # Get tacho
         tacho_value = self.speedController.get_tacho()
-        tacho_matrix = np.ones((self.height, self.width), dtype='float32') * (tacho_value - self.min_tacho) / (self.max_tacho - self.min_tacho) * 255
+        tacho_value = tacho_value * (tacho_value - self.min_tacho) / (self.max_tacho - self.min_tacho) * 100 - 50
 
         # TODO remove this and replace by real reward
         self.delta_tacho = tacho_value - self.old_tacho_value
@@ -209,12 +212,13 @@ class SimuEnv(gym.Env):
 
         # Get camera image
         image_ligne = self.imageAnalyser.get_image_ligne()
+        encoded_image_ligne = self.imageAnalyser.encode_image_ligne(image_ligne)
 
         # Put observations in a tensor
-        ob = np.zeros((self.height, self.width, 3))
-        ob[..., 0] = image_ligne
-        ob[..., 1] = gyro_matrix
-        ob[..., 2] = tacho_matrix
+        ob = np.zeros((2+self.nb_features))
+        ob[0] = gyro_value
+        ob[1] = tacho_value
+        ob[2:] = encoded_image_ligne
 
         return ob
 
