@@ -1,19 +1,25 @@
 import gym
-from gym import error, spaces, utils
-from gym.utils import seeding
-
 import numpy as np
+from gym import spaces
 
-from Simulator import Simulator
-from FakeSpeedController import SpeedController
-from FakeVoiture import Voiture
-from FakeArduino import Arduino
-from FakeImageAnalyser import ImageAnalyser
+from robot.Car import Car
+from robot.Gyro import Gyro
+from robot.ImageAnalyzer import ImageAnalyzer
+from robot.Simulator import Simulator
+from robot.SpeedController import SpeedController
+from robot.Tachometer import Tachometer
+
 
 class SimuEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self):
+        self.speed_controller = None
+        self.image_analyzer = None
+        self.tachometer = None
+        self.gyro = None
+        self.car = None
+
         # TODO remove these lines after creating real reward
         self.old_tacho_value = 0
         self.delta_tacho = 0
@@ -22,19 +28,25 @@ class SimuEnv(gym.Env):
         ###########################
         # Create and init simulator
         ###########################
+        self.simulator = Simulator()
 
-        simulator = Simulator()
-        self.simulator = simulator
+        self.handles = {
+            "right_motor": self.simulator.get_handle("driving_joint_rear_right"),
+            "left_motor": self.simulator.get_handle("driving_joint_rear_left"),
+            "left_steering": self.simulator.get_handle("steering_joint_fl"),
+            "right_steering": self.simulator.get_handle("steering_joint_fr"),
+            "cam": self.simulator.get_handle("Vision_sensor"),
+            "base_car": self.simulator.get_handle("base_link"),
+            "int_wall": self.simulator.get_handle("int_wall"),
+            "ext_wall": self.simulator.get_handle("ext_wall"),
+            "body_chasis": self.simulator.get_handle("body_chasis")
+        }
+        self.gyro_name = "gyroZ"
 
         # Create robot control objects
-        self._create_robot_control_objects(self.simulator)
+        self._recreate_components()
 
         self.simulator.start_simulation()
-
-        # Execute arduino and speedController a first time
-        components = [self.arduino, self.imageAnalyser, self.speedController]
-        for component in components:
-            component.execute()
 
         ###############################
         # Create actions space
@@ -48,13 +60,15 @@ class SimuEnv(gym.Env):
         self.coeff_action_speed = 2.0 # Multiplier (to adapt order of magnitude of actions)
         self.center_speed = 50.0    # Medium speed
 
-        min_action = np.array([self.min_steering * self.coeff_action_steering, (self.min_speed-self.center_speed) * self.coeff_action_speed])
-        max_action = np.array([self.max_steering * self.coeff_action_steering, (self.max_speed-self.center_speed) * self.coeff_action_speed])
+        min_action = np.array([self.min_steering * self.coeff_action_steering,
+                               (self.min_speed - self.center_speed) * self.coeff_action_speed])
+        max_action = np.array([self.max_steering * self.coeff_action_steering,
+                               (self.max_speed - self.center_speed) * self.coeff_action_speed])
 
         self.viewer = None
 
         self.action_space = spaces.Box(low=min_action, high=max_action,
-                                dtype=np.float32)
+                                       dtype=np.float32)
 
         ##############################
         # Create observations space
@@ -70,10 +84,10 @@ class SimuEnv(gym.Env):
         self.nb_features = self.imageAnalyser.get_nb_features_encoding()  # Nb of features in the output of encoder
 
         # Observations are encoded that way:
-        # channel 0: (gyro - min_gyro) * (max_gyro - min_gyro) * 100 - 50
-        # channel 1: (tacho - min_tacho) * (max_tacho - min_tacho) * 100 - 50
-        # channels 2 to 2+nb_features : image encoded in nb_features by an encoder
-        self.observation_space = spaces.Box(low=-50.0, high=50.0, shape=(2 + self.nb_features,), dtype='float32')
+        # Channel 0: image
+        # Channel 1: all pixels = (gyro - min_gyro) * (max_gyro - min_gyro) * 255
+        # Channel 2: all pixels = (tacho - min_tacho) * (max_tacho - min_tacho) * 255
+        self.observation_space = spaces.Box(low=0.0, high=255.0, shape=(self.height, self.width, 3), dtype='float32')
 
     def step(self, action):
         """
@@ -116,8 +130,8 @@ class SimuEnv(gym.Env):
 
         steering = action[0] / self.coeff_action_steering
         speed = (action[1] + self.center_speed) / self.coeff_action_speed
-        self.voiture.tourne(np.clip(steering, self.min_steering, self.max_steering))
-        self.voiture.avance(np.clip(speed, self.min_speed, self.max_speed))
+        self.car.tourne(np.clip(steering, self.min_steering, self.max_steering))
+        self.car.avance(np.clip(speed, self.min_speed, self.max_speed))
         print("\nApplying control. Steering: ", steering, " Speed: ", speed)
 
         # Compute penalty if actions are out of action space
@@ -126,13 +140,12 @@ class SimuEnv(gym.Env):
         self.action_penalty -= max(steering - self.max_steering, 0) / action_penalty_coeff
         self.action_penalty -= max(-steering + self.min_steering, 0) / action_penalty_coeff
         self.action_penalty -= max(speed - self.max_speed, 0) / action_penalty_coeff
-        self.action_penalty -= max(-speed + self.min_speed, 0) / action_penalty_coeff 
+        self.action_penalty -= max(-speed + self.min_speed, 0) / action_penalty_coeff
 
         # print("Entering simulator step")
 
         # Execute simulation
         self.simulator.do_simulation_step()
-        self.simulator.get_simulation_time()   # Increment simulation time *** TODO put this in do_simulation_step?
 
         # print("Exit simulator step")
 
@@ -156,10 +169,9 @@ class SimuEnv(gym.Env):
 
     def reset(self):
         # Reset simulation
-        self.simulator.reset_simulation()
-
-        # Reset robot control objects
-        self._create_robot_control_objects(self.simulator)
+        self.simulator.teleport_to_start_pos()
+        # Create robot control objects
+        self._recreate_components()
 
         obs = self._get_obs()
         return obs
@@ -174,7 +186,7 @@ class SimuEnv(gym.Env):
         """ Reward is given for XY. """
         # TODO create real reward
         # return self.delta_tacho - 1.0
-        current_pos = self.simulator.get_object_position(self.base_car)
+        current_pos = self.simulator.get_object_position(self.handles['base_car'])
         if current_pos is None:
             return 0.0
         current_pos = np.array(current_pos)[1]
@@ -187,32 +199,27 @@ class SimuEnv(gym.Env):
         reward -= 0.1
         # Add the action penalty if actions are out of action space
         reward += self.action_penalty
-        reward *= 100 # Change order of magnitude of reward
-        print ("Reward: ", reward, "Action penalty: ", self.action_penalty)
+        reward *= 100  # Change order of magnitude of reward
+        print("Reward: ", reward, "Action penalty: ", self.action_penalty)
         return reward
 
 
     def _get_obs(self):
         # Execute arduino and speedController
-        components = [self.arduino, self.imageAnalyser, self.speedController]
+        components = [self.gyro, self.tachometer, self.image_analyzer, self.speed_controller]
         for component in components:
             component.execute()
 
-        # Get gyro
-        gyro_value = self.arduino.gyro
-        gyro_value =  (gyro_value - self.min_gyro) / (self.max_gyro - self.min_gyro) * 100 - 50
+        gyro_matrix = self.get_gyro()
 
-        # Get tacho
-        tacho_value = self.speedController.get_tacho()
-        tacho_value = tacho_value * (tacho_value - self.min_tacho) / (self.max_tacho - self.min_tacho) * 100 - 50
+        tacho_matrix, tacho_value = self.get_tacho()
 
         # TODO remove this and replace by real reward
         self.delta_tacho = tacho_value - self.old_tacho_value
         self.old_tacho_value = tacho_value
 
         # Get camera image
-        image_ligne = self.imageAnalyser.get_image_ligne()
-        encoded_image_ligne = self.imageAnalyser.encode_image_ligne(image_ligne)
+        image_ligne = self.image_analyzer.get_image_ligne()
 
         # Put observations in a tensor
         ob = np.zeros((2+self.nb_features))
@@ -222,27 +229,39 @@ class SimuEnv(gym.Env):
 
         return ob
 
-    def _create_robot_control_objects(self, simulator):
-        right_motor = simulator.get_handle("driving_joint_rear_right")
-        left_motor = simulator.get_handle("driving_joint_rear_left")
-        left_steering = simulator.get_handle("steering_joint_fl")
-        right_steering = simulator.get_handle("steering_joint_fr")
-        gyro = "gyroZ"
-        cam = simulator.get_handle("Vision_sensor")
-        self.base_car = simulator.get_handle("base_link")
-        self.int_wall = simulator.get_handle("int_wall")
-        self.ext_wall = simulator.get_handle("ext_wall")
-        self.body_chassis = simulator.get_handle("body_chasis")
+    def get_gyro(self):
+        gyro_value = self.gyro.get_cap()
+        gyro_matrix = np.ones((self.height, self.width), dtype='float32') * (gyro_value - self.min_gyro) / (
+                self.max_gyro - self.min_gyro) * 255
+        return gyro_matrix
 
-        self.speedController = SpeedController(simulator, [left_motor, right_motor],
-                                        simulation_step_time=simulator.get_simulation_time_step(),
-                                        base_car=self.base_car)
-        self.voiture = Voiture(simulator, [left_steering, right_steering], [left_motor, right_motor],
-                        self.speedController, )
+    def get_tacho(self):
+        tacho_value = self.tachometer.get_tacho()
+        tacho_matrix = np.ones((self.height, self.width), dtype='float32') * (tacho_value - self.min_tacho) / (
+                self.max_tacho - self.min_tacho) * 255
+        return tacho_matrix, tacho_value
 
-        self.imageAnalyser = ImageAnalyser(simulator, cam)
+    def _recreate_components(self):
 
-        self.arduino = Arduino(simulator, gyro)
+        self.speed_controller = SpeedController(simulator=self.simulator,
+                                                motor_handles=[self.handles["left_motor"], self.handles["right_motor"]],
+                                                simulation_step_time=self.simulator.get_simulation_time_step())
+
+        self.image_analyzer = ImageAnalyzer(simulator=self.simulator,
+                                            cam_handle=self.handles["cam"])
+
+        self.tachometer = Tachometer(simulator=self.simulator,
+                                     base_car=self.handles['base_car'])
+
+        self.gyro = Gyro(simulator=self.simulator,
+                         gyro_name=self.gyro_name)
+
+        self.car = Car(simulator=self.simulator,
+                       steering_handles=[self.handles["left_steering"], self.handles["right_steering"]],
+                       motors_handles=[self.handles["left_motor"], self.handles["right_motor"]],
+                       speed_controller=self.speed_controller,
+                       tachometer=self.tachometer,
+                       gyro=self.gyro)
 
     def _check_collision_with_wall(self):
         # TODO replace body_chassis by base_car ?
@@ -250,11 +269,13 @@ class SimuEnv(gym.Env):
         # simxCheckCollision not working (crash when collision on NULL pointer)
         # success1, collision1 = self.simulator.client.simxCheckCollision(self.int_wall, self.body_chassis, self.simulator.client.simxServiceCall())
         # success2, collision2 = self.simulator.client.simxCheckCollision(self.ext_wall, self.body_chassis, self.simulator.client.simxServiceCall())
-        
+
         # Added try/catch because sometimes it crashes. TODO: understand why
         try:
-            list1 = self.simulator.client.simxCheckDistance(self.int_wall, self.body_chassis, 0.05,  self.simulator.client.simxServiceCall())
-            list2 = self.simulator.client.simxCheckDistance(self.ext_wall, self.body_chassis, 0.05,  self.simulator.client.simxServiceCall())
+            list1 = self.simulator.client.simxCheckDistance(self.handles["int_wall"], self.handles["body_chasis"], 0.05,
+                                                            self.simulator.client.simxServiceCall())
+            list2 = self.simulator.client.simxCheckDistance(self.handles["ext_wall"], self.handles["body_chasis"], 0.05,
+                                                            self.simulator.client.simxServiceCall())
         except:
             print("Warning: cannot compute distance to walls")
             return False
