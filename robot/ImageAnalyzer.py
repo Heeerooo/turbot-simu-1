@@ -4,7 +4,6 @@ import numpy as np
 
 from robot.Config import CAMERA_DELAY
 
-from keras.models import load_model
 
 class ImageAnalyzer:
     # Constantes
@@ -46,39 +45,12 @@ class ImageAnalyzer:
     position_ligne_2 = 0.
     poly_coeff_square = None
 
-    # Parameters for encoding line image in features
-    nb_features_encoding = 8  # Nb of features in output of encoder
-    model_path = '../deep-learning-model/encoder_8_feats.h5'
-    encoder_input_width = 384
-    encoder_input_height = 256
-
-
     def __init__(self, simulator, cam_handle):
         self.cam_handle = cam_handle
         self.simulator = simulator
 
         # Initialize image_ligne with empty image
         self.image_ligne = np.zeros((self.HEIGHT, self.WIDTH), dtype=np.uint8)
-
-        # Load model for encoding line images into features
-        self.encoder_model = load_model(self.model_path)
-
-    def get_nb_features_encoding(self):
-        return self.nb_features_encoding
-
-    def encode_image_ligne(self, image):
-        input_height = image.shape[0]
-        input_width = image.shape[1]
-        padding_height = (self.encoder_input_height - input_height) // 2
-        padding_width = (self.encoder_input_width - input_width) // 2
-
-        image_padded = np.zeros((1, self.encoder_input_height, self.encoder_input_width), dtype=np.float32)
-        image_padded[0, padding_height:-padding_height, padding_width:-padding_width] = image
-        image_padded = image_padded / 255.0
-
-        encoded = self.encoder_model.predict(image_padded)[0]
-
-        return encoded
 
     def execute(self):
         resolution, byte_array_image_string = self.simulator.get_gray_image(self.cam_handle, CAMERA_DELAY)
@@ -107,7 +79,13 @@ class ImageAnalyzer:
 
         # Get contours
         _, thresh = cv2.threshold(int_mat, self.MIN_THRESHOLD_CONTOUR, self.MAX_VALUE_CONTOUR, 0)
-        contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        result = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+        # Open cv version compatibility issue
+        if len(result) == 2:
+            contours = result[0]
+        else:
+            contours = result[1]
 
         if len(contours) == 0:
             # No contours, no need to remove anything
@@ -169,7 +147,6 @@ class ImageAnalyzer:
 
         # Interpole la ligne � partir des points x, y
         poly2, poly_coeff = poly_2_interpol(image)
-
 
         if poly2 is None:
             # Si on a perdu la ligne, on fait l'hypothese qu'elle est du meme cote que la derniere fois qu'on l'a vue

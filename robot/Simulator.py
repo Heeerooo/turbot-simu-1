@@ -20,6 +20,7 @@ class Simulator:
         self.client.simxSynchronous(True)
         self.client.simxStartSimulation(self.client.simxDefaultPublisher())
         self.client.simxGetSimulationStepDone(self.client.simxDefaultSubscriber(self.simulation_step_done))
+        self.get_simulation_time()
         self.running = True
 
     def do_simulation_step(self):

@@ -5,6 +5,7 @@ from gym import spaces
 from robot.Car import Car
 from robot.Gyro import Gyro
 from robot.ImageAnalyzer import ImageAnalyzer
+from robot.ImageEncoder import ImageEncoder
 from robot.Simulator import Simulator
 from robot.SpeedController import SpeedController
 from robot.Tachometer import Tachometer
@@ -56,9 +57,9 @@ class SimuEnv(gym.Env):
         self.max_steering = 100.0
         self.min_speed = 0
         self.max_speed = 100.0
-        self.coeff_action_steering = 1.0 # Multiplier (to adapt order of magnitude of actions)
-        self.coeff_action_speed = 2.0 # Multiplier (to adapt order of magnitude of actions)
-        self.center_speed = 50.0    # Medium speed
+        self.coeff_action_steering = 1.0  # Multiplier (to adapt order of magnitude of actions)
+        self.coeff_action_speed = 2.0  # Multiplier (to adapt order of magnitude of actions)
+        self.center_speed = 50.0  # Medium speed
 
         min_action = np.array([self.min_steering * self.coeff_action_steering,
                                (self.min_speed - self.center_speed) * self.coeff_action_speed])
@@ -81,13 +82,13 @@ class SimuEnv(gym.Env):
         self.width = 320
         self.height = 240
 
-        self.nb_features = self.imageAnalyser.get_nb_features_encoding()  # Nb of features in the output of encoder
+        self.nb_features = self.image_encoder.get_nb_features_encoding()  # Nb of features in the output of encoder
 
         # Observations are encoded that way:
         # Channel 0: image
         # Channel 1: all pixels = (gyro - min_gyro) * (max_gyro - min_gyro) * 255
         # Channel 2: all pixels = (tacho - min_tacho) * (max_tacho - min_tacho) * 255
-        self.observation_space = spaces.Box(low=0.0, high=255.0, shape=(self.height, self.width, 3), dtype='float32')
+        self.observation_space = spaces.Box(low=-50.0, high=50.0, shape=(2 + self.nb_features,), dtype='float32')
 
     def step(self, action):
         """
@@ -203,43 +204,38 @@ class SimuEnv(gym.Env):
         print("Reward: ", reward, "Action penalty: ", self.action_penalty)
         return reward
 
-
     def _get_obs(self):
         # Execute arduino and speedController
-        components = [self.gyro, self.tachometer, self.image_analyzer, self.speed_controller]
+        components = [self.gyro, self.tachometer, self.image_analyzer, self.image_encoder, self.speed_controller]
         for component in components:
             component.execute()
 
-        gyro_matrix = self.get_gyro()
+        gyro_value = self.get_gyro()
 
-        tacho_matrix, tacho_value = self.get_tacho()
+        tacho_value = self.get_tacho()
 
         # TODO remove this and replace by real reward
         self.delta_tacho = tacho_value - self.old_tacho_value
         self.old_tacho_value = tacho_value
 
         # Get camera image
-        image_ligne = self.image_analyzer.get_image_ligne()
+        image_line_encoded = self.image_encoder.get_encoded_image()
 
         # Put observations in a tensor
-        ob = np.zeros((2+self.nb_features))
+        ob = np.zeros((2 + self.nb_features))
         ob[0] = gyro_value
         ob[1] = tacho_value
-        ob[2:] = encoded_image_ligne
+        ob[2:] = image_line_encoded
 
         return ob
 
     def get_gyro(self):
         gyro_value = self.gyro.get_cap()
-        gyro_matrix = np.ones((self.height, self.width), dtype='float32') * (gyro_value - self.min_gyro) / (
-                self.max_gyro - self.min_gyro) * 255
-        return gyro_matrix
+        return (gyro_value - self.min_gyro) / (self.max_gyro - self.min_gyro) * 100 - 50
 
     def get_tacho(self):
         tacho_value = self.tachometer.get_tacho()
-        tacho_matrix = np.ones((self.height, self.width), dtype='float32') * (tacho_value - self.min_tacho) / (
-                self.max_tacho - self.min_tacho) * 255
-        return tacho_matrix, tacho_value
+        return tacho_value * (tacho_value - self.min_tacho) / (self.max_tacho - self.min_tacho) * 100 - 50
 
     def _recreate_components(self):
 
@@ -249,6 +245,8 @@ class SimuEnv(gym.Env):
 
         self.image_analyzer = ImageAnalyzer(simulator=self.simulator,
                                             cam_handle=self.handles["cam"])
+
+        self.image_encoder = ImageEncoder(image_analyzer=self.image_analyzer)
 
         self.tachometer = Tachometer(simulator=self.simulator,
                                      base_car=self.handles['base_car'])
