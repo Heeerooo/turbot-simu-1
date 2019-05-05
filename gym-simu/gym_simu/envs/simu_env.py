@@ -10,7 +10,6 @@ from robot.Simulator import Simulator
 from robot.SpeedController import SpeedController
 from robot.Tachometer import Tachometer
 
-import time
 
 class SimuEnv(gym.Env):
     metadata = {'render.modes': ['human']}
@@ -176,11 +175,6 @@ class SimuEnv(gym.Env):
 
         # Reset simulation
         self.simulator.teleport_to_start_pos()
-
-        # Wait and teleport again (hack to help the teleport work better)
-        time.sleep(0.05)
-        self.simulator.teleport_to_start_pos()
-        time.sleep(0.05)
 
         # Create robot control objects
         # self._recreate_components()
