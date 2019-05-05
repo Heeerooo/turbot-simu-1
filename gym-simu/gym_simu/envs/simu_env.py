@@ -10,6 +10,7 @@ from robot.Simulator import Simulator
 from robot.SpeedController import SpeedController
 from robot.Tachometer import Tachometer
 
+import time
 
 class SimuEnv(gym.Env):
     metadata = {'render.modes': ['human']}
@@ -131,9 +132,12 @@ class SimuEnv(gym.Env):
 
         steering = action[0] / self.coeff_action_steering
         speed = (action[1] + self.center_speed) / self.coeff_action_speed
-        self.car.tourne(np.clip(steering, self.min_steering, self.max_steering))
-        self.car.avance(np.clip(speed, self.min_speed, self.max_speed))
-        print("\nApplying control. Steering: ", steering, " Speed: ", speed)
+        clipped_steering = np.clip(steering, self.min_steering, self.max_steering)
+        clipped_speed = np.clip(speed, self.min_speed, self.max_speed)
+        self.car.tourne(clipped_steering)
+        self.car.avance(clipped_speed)
+        print("\nApplying control. Steering: ", clipped_steering, " Speed: ", clipped_speed)
+        print("Initial control. Steering: ", steering, " Speed: ", speed)
 
         # Compute penalty if actions are out of action space
         self.action_penalty = 0.0
@@ -169,10 +173,17 @@ class SimuEnv(gym.Env):
         return ob, reward, episode_over, {}
 
     def reset(self):
+
         # Reset simulation
         self.simulator.teleport_to_start_pos()
+
+        # Wait and teleport again (hack to help the teleport work better)
+        time.sleep(0.05)
+        self.simulator.teleport_to_start_pos()
+        time.sleep(0.05)
+
         # Create robot control objects
-        self._recreate_components()
+        # self._recreate_components()
 
         obs = self._get_obs()
         return obs
