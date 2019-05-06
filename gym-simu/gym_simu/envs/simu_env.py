@@ -169,8 +169,8 @@ class SimuEnv(gym.Env):
         episode_over = self._check_collision_with_wall()
 
         # Penalize the reward when hitting a wall
-        if episode_over:
-            reward -= 100.0
+        # if episode_over:
+        #     reward -= 100.0
 
         # print ("Exiting step")
 
@@ -210,7 +210,7 @@ class SimuEnv(gym.Env):
         self.last_current_pos = current_pos
         # Add a constant penalty for each step (to minimize number of steps)
         reward -= 0.01
-        print("Reward: ", reward)
+        # print("Reward: ", reward)
         return reward
 
     def _get_obs(self):
