@@ -54,7 +54,7 @@ class SimuEnv(gym.Env):
 
         self.min_steering = -100.0
         self.max_steering = 100.0
-        self.min_speed = 0
+        self.min_speed = 20.0
         self.max_speed = 100.0
         self.coeff_action_steering = 1.0  # Multiplier (to adapt order of magnitude of actions)
         self.coeff_action_speed = 2.0  # Multiplier (to adapt order of magnitude of actions)
