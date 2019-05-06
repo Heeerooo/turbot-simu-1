@@ -40,11 +40,6 @@ class ImageAnalyzer:
     first_time = True
     last_execution_time = 0
 
-    # Initialisation de la position de la ligne (evite crash si pas de ligne detectee au lancement)
-    position_ligne_1 = 0.
-    position_ligne_2 = 0.
-    poly_coeff_square = None
-
     def __init__(self, simulator, cam_handle):
         self.cam_handle = cam_handle
         self.simulator = simulator
@@ -59,12 +54,6 @@ class ImageAnalyzer:
         mask0 = self.convert_image_to_numpy(byte_array_image_string, resolution)
         mask0 = self.clean_mask(mask0)
         self.image_ligne = mask0
-
-        self.position_ligne_1, self.position_ligne_2, poly_coeff = self.get_ecart_ligne(mask0)
-        if poly_coeff is not None:
-            self.poly_coeff_square = poly_coeff[0]
-        else:
-            self.poly_coeff_square = None
 
     def get_image_ligne(self):
         return self.image_ligne
@@ -125,45 +114,6 @@ class ImageAnalyzer:
             result = result / 255.
 
             return result
-
-    # get_ecart_ligne
-    def get_ecart_ligne(self, image):
-
-        def poly_2_interpol(image):
-            nonzeros_indexes = np.nonzero((image > self.LINE_THRESHOLD).copy())
-            x = nonzeros_indexes[0]
-            y = nonzeros_indexes[1]
-            if len(x) < 2:
-                return None, None
-            else:
-                poly_coeff = np.polyfit(x, y, 2)
-
-            # Create interpolated function
-            def interpol_function(x):
-                values = np.int16(poly_coeff[2] + x * poly_coeff[1] + x ** 2 * poly_coeff[0])
-                return np.minimum(np.maximum(values, 0), self.WIDTH - 1)
-
-            return interpol_function, poly_coeff
-
-        # Interpole la ligne � partir des points x, y
-        poly2, poly_coeff = poly_2_interpol(image)
-
-        if poly2 is None:
-            # Si on a perdu la ligne, on fait l'hypothese qu'elle est du meme cote que la derniere fois qu'on l'a vue
-            return self.position_ligne_1, self.position_ligne_2, None
-        else:
-            position_1 = (2.0 * poly2(self.X_INFERENCE_POINT_1) / self.WIDTH) - 1.0
-            position_2 = (2.0 * poly2(self.X_INFERENCE_POINT_2) / self.WIDTH) - 1.0
-            return position_1, position_2, poly_coeff
-
-    def getPositionLigne1(self):
-        return self.position_ligne_1
-
-    def getPositionLigne2(self):
-        return self.position_ligne_2
-
-    def getPolyCoeffSquare(self):
-        return self.poly_coeff_square
 
     # Tells if a new image has arrived
     def isThereANewImage(self):
