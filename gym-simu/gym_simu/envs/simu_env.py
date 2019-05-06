@@ -10,7 +10,6 @@ from robot.Simulator import Simulator
 from robot.SpeedController import SpeedController
 from robot.Tachometer import Tachometer
 
-
 class SimuEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
@@ -60,16 +59,20 @@ class SimuEnv(gym.Env):
         self.coeff_action_steering = 1.0  # Multiplier (to adapt order of magnitude of actions)
         self.coeff_action_speed = 2.0  # Multiplier (to adapt order of magnitude of actions)
         self.center_speed = 50.0  # Medium speed
-
-        min_action = np.array([self.min_steering * self.coeff_action_steering,
-                               (self.min_speed - self.center_speed) * self.coeff_action_speed])
-        max_action = np.array([self.max_steering * self.coeff_action_steering,
-                               (self.max_speed - self.center_speed) * self.coeff_action_speed])
+        self.steering = 0.0
+        self.speed = 0.0
 
         self.viewer = None
 
-        self.action_space = spaces.Box(low=min_action, high=max_action,
-                                       dtype=np.float32)
+        # Action space
+        # 0: do nothing
+        # 1: +5 speed
+        # 2: -5 speed
+        # 3: +1 steering
+        # 4: +10 steering
+        # 5: -1 steering
+        # 6: -10 steering
+        self.action_space = spaces.Discrete(7)
 
         ##############################
         # Create observations space
@@ -129,22 +132,24 @@ class SimuEnv(gym.Env):
         # Send action to simulator
         ##############################
 
-        steering = action[0] / self.coeff_action_steering
-        speed = (action[1] + self.center_speed) / self.coeff_action_speed
-        clipped_steering = np.clip(steering, self.min_steering, self.max_steering)
-        clipped_speed = np.clip(speed, self.min_speed, self.max_speed)
-        self.car.tourne(clipped_steering)
-        self.car.avance(clipped_speed)
-        print("\nApplying control. Steering: ", clipped_steering, " Speed: ", clipped_speed)
-        print("Initial control. Steering: ", steering, " Speed: ", speed)
-
-        # Compute penalty if actions are out of action space
-        self.action_penalty = 0.0
-        action_penalty_coeff = 20000
-        self.action_penalty -= max(steering - self.max_steering, 0) / action_penalty_coeff
-        self.action_penalty -= max(-steering + self.min_steering, 0) / action_penalty_coeff
-        self.action_penalty -= max(speed - self.max_speed, 0) / action_penalty_coeff
-        self.action_penalty -= max(-speed + self.min_speed, 0) / action_penalty_coeff
+        assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
+        if action ==   1:
+            self.speed += 5
+        elif action == 2:
+            self.speed -= 5
+        elif action == 3:
+            self.steering += 1
+        elif action == 4:
+            self.steering += 10
+        elif action == 5:
+            self.steering -= 1
+        elif action == 6:
+            self.steering -= 10
+        self.steering = np.clip(self.steering, self.min_steering, self.max_steering)
+        self.speed = np.clip(self.speed, self.min_speed, self.max_speed)
+        self.car.tourne(self.steering)
+        self.car.avance(self.speed)
+        # print("Applying control. Steering: ", self.steering, " Speed: ", self.speed)
 
         # print("Entering simulator step")
 
@@ -175,6 +180,8 @@ class SimuEnv(gym.Env):
 
         # Reset simulation
         self.simulator.teleport_to_start_pos()
+        self.steering = 0.0
+        self.speed = 0.0
 
         # Create robot control objects
         # self._recreate_components()
@@ -202,11 +209,8 @@ class SimuEnv(gym.Env):
         reward = current_pos - self.last_current_pos
         self.last_current_pos = current_pos
         # Add a constant penalty for each step (to minimize number of steps)
-        reward -= 0.1
-        # Add the action penalty if actions are out of action space
-        reward += self.action_penalty
-        reward *= 100  # Change order of magnitude of reward
-        print("Reward: ", reward, "Action penalty: ", self.action_penalty)
+        reward -= 0.01
+        print("Reward: ", reward)
         return reward
 
     def _get_obs(self):
