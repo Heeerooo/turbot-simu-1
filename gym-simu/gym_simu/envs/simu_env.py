@@ -88,10 +88,12 @@ class SimuEnv(gym.Env):
         self.nb_features = self.image_encoder.get_nb_features_encoding()  # Nb of features in the output of encoder
 
         # Observations are encoded that way:
-        # Channel 0: image
-        # Channel 1: all pixels = (gyro - min_gyro) * (max_gyro - min_gyro) * 255
-        # Channel 2: all pixels = (tacho - min_tacho) * (max_tacho - min_tacho) * 255
-        self.observation_space = spaces.Box(low=-50.0, high=50.0, shape=(2 + self.nb_features,), dtype='float32')
+        # Channel 0: gyro
+        # Channel 1: tacho
+        # Channel 2: target steering
+        # Channel 3: target speed
+        # Channel 4..: image encoded features
+        self.observation_space = spaces.Box(low=-100.0, high=100.0, shape=(4 + self.nb_features,), dtype='float32')
 
     def step(self, action):
         """
@@ -231,10 +233,12 @@ class SimuEnv(gym.Env):
         image_line_encoded = self.image_encoder.get_encoded_image()
 
         # Put observations in a tensor
-        ob = np.zeros((2 + self.nb_features))
+        ob = np.zeros((4 + self.nb_features))
         ob[0] = gyro_value
         ob[1] = tacho_value
-        ob[2:] = image_line_encoded
+        ob[2] = self.steering
+        ob[3] = self.speed
+        ob[4:] = image_line_encoded
 
         return ob
 
