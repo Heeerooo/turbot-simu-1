@@ -1,3 +1,4 @@
+import random
 import time
 
 from robot.Simulator import Simulator
@@ -21,23 +22,25 @@ handles = {
 
 gyro_name = "gyroZ"
 
-for i in range(0, 10):
-    simulator.start_simulation()
-    for n in range(0, 10):
+simulator.start_simulation()
+for n in range(0, 50):
+    steering = random.randint(-5, 5) / 100
+    print("steering %f " % steering)
+    speed = random.randint(-100, -20)
+    print("speed %f " % steering)
+    start_time = time.time()
+    while time.time() - start_time < simulation_duration_seconds:
+        start_step_time = time.time()
+        print("code execution time : %fs " % (time.time() - start_step_time))
+        print(simulator.client.simxGetJointForce(handles["damper_left"], simulator.client.simxServiceCall()))
+        print(simulator.get_object_position(handles["steering_axis"]))
 
-        start_time = time.time()
-        while time.time() - start_time < simulation_duration_seconds:
-            start_step_time = time.time()
-            # [component.execute() for component in executable_components]
-            print("code execution time : %fs " % (time.time() - start_step_time))
-            print(simulator.client.simxGetJointForce(handles["damper_left"], simulator.client.simxServiceCall()))
-            print(simulator.get_object_position(handles["steering_axis"]))
-            simulator.set_target_pos(handles["right_steering"], -0.05)
-            simulator.set_target_pos(handles["left_steering"], -0.05)
-            simulator.set_target_speed(handles["left_motor"], -50)
-            simulator.set_target_speed(handles["right_motor"], -50)
-            start_simulator_step_time = time.time()
-            simulator.do_simulation_step()
-            print("simulator execution time : %fs " % (time.time() - start_simulator_step_time))
-        simulator.teleport_to_start_pos()
-    simulator.stop_simulation()
+        simulator.set_target_pos(handles["right_steering"], steering)
+        simulator.set_target_pos(handles["left_steering"], steering)
+        simulator.set_target_speed(handles["left_motor"], speed)
+        simulator.set_target_speed(handles["right_motor"], speed)
+        start_simulator_step_time = time.time()
+        simulator.do_simulation_step()
+        print("simulator execution time : %fs " % (time.time() - start_simulator_step_time))
+    simulator.teleport_to_start_pos()
+simulator.stop_simulation()
