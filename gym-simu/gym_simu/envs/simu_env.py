@@ -10,6 +10,8 @@ from robot.Simulator import Simulator
 from robot.SpeedController import SpeedController
 from robot.Tachometer import Tachometer
 
+import time
+
 class SimuEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
@@ -24,6 +26,7 @@ class SimuEnv(gym.Env):
         self.old_tacho_value = 0
         self.delta_tacho = 0
         self.last_current_pos = None
+        self.last_reward = 0.0
 
         ###########################
         # Create and init simulator
@@ -175,6 +178,7 @@ class SimuEnv(gym.Env):
         #     reward -= 100.0
 
         # print ("Exiting step")
+        # print("Reward: ", reward)
 
         return ob, reward, episode_over, {}
 
@@ -184,7 +188,8 @@ class SimuEnv(gym.Env):
         self.simulator.teleport_to_start_pos()
         self.steering = 0.0
         self.speed = 0.0
-
+        
+        self.last_current_pos = None
         # Create robot control objects
         # self._recreate_components()
 
@@ -210,9 +215,17 @@ class SimuEnv(gym.Env):
             return 0.0
         reward = current_pos - self.last_current_pos
         self.last_current_pos = current_pos
+
+        # Hack to solve the issue of wrong reward when teleporting, because simulator communication is asynchronous
+        # TODO find a better way
+        if abs(reward - self.last_reward) > 2.0:
+            self.last_reward = 0.0
+            return 0.0
+        self.last_reward = reward
+
         # Add a constant penalty for each step (to minimize number of steps)
-        reward -= 0.01
-        # print("Reward: ", reward)
+        reward -= 0.001
+
         return reward
 
     def _get_obs(self):
