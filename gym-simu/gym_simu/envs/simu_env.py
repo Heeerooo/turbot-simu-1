@@ -169,9 +169,10 @@ class SimuEnv(gym.Env):
 
         ob = self._get_obs()
 
-        reward = self.get_reward()
+        distance_to_walls = self._get_distance_with_walls()
+        reward = self.get_reward(distance_to_walls)
 
-        episode_over = self._check_collision_with_wall()
+        episode_over = self._check_collision_with_wall(distance_to_walls)
 
         # Penalize the reward when hitting a wall
         # if episode_over:
@@ -202,7 +203,7 @@ class SimuEnv(gym.Env):
     def render(self, mode='human', close=False):
         pass
 
-    def get_reward(self):
+    def get_reward(self, distance_to_walls):
         """ Reward is given for XY. """
         # TODO create real reward
         # return self.delta_tacho - 1.0
@@ -221,10 +222,14 @@ class SimuEnv(gym.Env):
         if abs(reward - self.last_reward) > 2.0:
             self.last_reward = 0.0
             return 0.0
-        self.last_reward = reward
+
+        # Add a reward for keeping high distance to walls
+        reward += distance_to_walls - 0.62
 
         # Add a constant penalty for each step (to minimize number of steps)
         reward -= 0.001
+
+        self.last_reward = reward
 
         return reward
 
@@ -287,47 +292,23 @@ class SimuEnv(gym.Env):
                        tachometer=self.tachometer,
                        gyro=self.gyro)
 
-    def _check_collision_with_wall(self):
-        # TODO replace body_chassis by base_car ?
-
-        # simxCheckCollision not working (crash when collision on NULL pointer)
-        # success1, collision1 = self.simulator.client.simxCheckCollision(self.int_wall, self.body_chassis, self.simulator.client.simxServiceCall())
-        # success2, collision2 = self.simulator.client.simxCheckCollision(self.ext_wall, self.body_chassis, self.simulator.client.simxServiceCall())
-
-        # Added try/catch because sometimes it crashes. TODO: understand why
+    def _get_distance_with_walls(self):
         try:
-            list1 = self.simulator.client.simxCheckDistance(self.handles["int_wall"], self.handles["body_chasis"], 0.05,
+            list1 = self.simulator.client.simxCheckDistance(self.handles["int_wall"], self.handles["body_chasis"], -1.0,
                                                             self.simulator.client.simxServiceCall())
-            list2 = self.simulator.client.simxCheckDistance(self.handles["ext_wall"], self.handles["body_chasis"], 0.05,
+            list2 = self.simulator.client.simxCheckDistance(self.handles["ext_wall"], self.handles["body_chasis"], -1.0,
                                                             self.simulator.client.simxServiceCall())
         except:
             print("Warning: cannot compute distance to walls")
-            return False
+            return 0.75
 
-        # simxCheckDistance has a weird behaviour: it returns lists of len 2 if distance > threshold, len 5 otherwise.
-        # Other issue: it returns success only if distance < threshold, otherwise other values are None.
-        # Thus we handle this.
-        if len(list1) == 2:
-            success1, collision1 = list1
-        elif len(list1) == 5:
-            success1, collision1, _, _, _ = list1
+        success1, _, dist1, _, _ = list1
+        success2, _, dist2, _, _ = list2
+
+        if success1 and success2:
+            return min(dist1, dist2)
         else:
-            success1 = False
-
-        if len(list2) == 2:
-            success2, collision2 = list2
-        elif len(list2) == 5:
-            success2, collision2, _, _, _ = list2
-        else:
-            success2 = False
-
-        # Get collision
-        collision = False
-        if success1:
-            collision = collision or collision1
-        if success2:
-            collision = collision or collision2
-
-        # print ("Collision: ", collision)
-
-        return collision
+            return 0.75
+       
+    def _check_collision_with_wall(self, distance):
+        return distance < 0.05
