@@ -245,7 +245,7 @@ class SimuEnv(gym.Env):
         # Add a constant penalty for each step (to minimize number of steps)
         reward -= 0.001
 
-        print("step reward: %f " % reward)
+        print(" step reward: %f " % reward)
 
         return reward
 
@@ -285,22 +285,12 @@ class SimuEnv(gym.Env):
         return tacho_value * (tacho_value - self.min_tacho) / (self.max_tacho - self.min_tacho) * 100 - 50
 
     def _get_distance_with_walls(self):
-        try:
-            list1 = self.simulator.client.simxCheckDistance(self.handles["int_wall"], self.handles["body_chasis"], -1.0,
-                                                            self.simulator.client.simxServiceCall())
-            list2 = self.simulator.client.simxCheckDistance(self.handles["ext_wall"], self.handles["body_chasis"], -1.0,
-                                                            self.simulator.client.simxServiceCall())
-        except:
-            print("Warning: cannot compute distance to walls")
-            return 0.75
-
-        success1, _, dist1, _, _ = list1
-        success2, _, dist2, _, _ = list2
-
-        if success1 and success2:
-            return min(dist1, dist2)
-        else:
-            return 0.75
+        road_width = 1.5
+        distance_int = self.simulator.get_distance(self.handles["body_chasis"], self.handles["int_wall"],
+                                                   road_width / 2)
+        distance_ext = self.simulator.get_distance(self.handles["body_chasis"], self.handles["ext_wall"],
+                                                   road_width / 2)
+        return min(distance_int, distance_ext)
 
     def _check_collision_with_wall(self, distance):
         return distance < 0.05

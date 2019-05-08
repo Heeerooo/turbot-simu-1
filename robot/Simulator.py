@@ -125,10 +125,23 @@ class Simulator:
 
     def teleport_to_start_pos(self):
         self.client.simxCallScriptFunction("teleport@base_link", "sim.scripttype_childscript", None,
-                                                self.client.simxServiceCall())
+                                           self.client.simxServiceCall())
 
     def set_object_pos(self, object, pos):
         self.client.simxSetObjectPosition(object, -1, pos, self.client.simxServiceCall())
 
     def set_object_orientation(self, object, orientation):
         self.client.simxSetObjectOrientation(object, -1, orientation, self.client.simxServiceCall())
+
+    distances = {}
+
+    def get_distance(self, first, second, threshold):
+        if (first, second, threshold) not in self.distances:
+            self.distances[(first, second, threshold)] = threshold
+
+            def callback(result):
+                self.distances[(first, second, threshold)] = threshold if not result[0] or result[1] == 0 else \
+                    result[2]
+
+            self.client.simxCheckDistance(first, second, threshold, self.client.simxDefaultSubscriber(callback))
+        return self.distances[(first, second, threshold)]
