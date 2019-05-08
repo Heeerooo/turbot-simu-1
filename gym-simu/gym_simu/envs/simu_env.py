@@ -146,12 +146,6 @@ class SimuEnv(gym.Env):
                  However, official evaluations of your agent are not allowed to
                  use this for learning.
         """
-        # self._take_action(action)
-        # self.status = self.env.step()
-        # reward = self.get_reward()
-        # ob = self.env.getState()
-        # episode_over = self.status != hfo_py.IN_GAME
-
         ##############################
         # Send action to simulator
         ##############################
@@ -173,37 +167,30 @@ class SimuEnv(gym.Env):
         self.speed = np.clip(self.speed, self.min_speed, self.max_speed)
         self.car.tourne(self.steering)
         self.car.avance(self.speed)
-        # print("Applying control. Steering: ", self.steering, " Speed: ", self.speed)
 
-        # print("Entering simulator step")
+        # Robot controls
+        components = [self.gyro, self.tachometer, self.image_analyzer, self.image_encoder, self.speed_controller]
+        for component in components:
+            component.execute()
 
         # Execute simulation
         self.simulator.do_simulation_step()
-
-        # print("Exit simulator step")
 
         ####################################
         # Get rendered values from simulator
         ####################################
 
-        ob = self._get_obs()
+        ob = self.get_obs()
 
-        distance_to_walls = self._get_distance_with_walls()
+        distance_to_walls = self.get_distance_with_walls()
+
         reward = self.get_reward(distance_to_walls)
 
-        episode_over = self._check_collision_with_wall(distance_to_walls)
-
-        # Penalize the reward when hitting a wall
-        # if episode_over:
-        #     reward -= 100.0
-
-        # print ("Exiting step")
-        # print("Reward: ", reward)
+        episode_over = self.check_collision_with_wall(distance_to_walls)
 
         return ob, reward, episode_over, {}
 
     def reset(self):
-
         # Reset simulation
         self.simulator.teleport_to_start_pos()
         self.simulator.do_simulation_step()
@@ -211,13 +198,9 @@ class SimuEnv(gym.Env):
         self.speed = 0.0
         self.gyro.reset()
         self.tachometer.reset()
-
         self.last_current_pos = None
-        # Create robot control objects
-        # self._recreate_components()
 
-        obs = self._get_obs()
-        return obs
+        return self.get_obs()
 
     def close(self):
         self.simulator.stop_simulation()
@@ -225,35 +208,7 @@ class SimuEnv(gym.Env):
     def render(self, mode='human', close=False):
         pass
 
-    def get_reward(self, distance_to_walls):
-        """ Reward is given for XY. """
-        # TODO create real reward
-        # return self.delta_tacho - 1.0
-        current_pos = self.simulator.get_object_position(self.handles['base_car'])
-        if current_pos is None:
-            return 0.0
-        current_pos = np.array(current_pos)[1]
-        if self.last_current_pos is None:
-            self.last_current_pos = current_pos
-            return 0.0
-        reward = current_pos - self.last_current_pos
-        self.last_current_pos = current_pos
-
-        # Add a reward for keeping high distance to walls
-        reward += distance_to_walls - 0.62
-
-        # Add a constant penalty for each step (to minimize number of steps)
-        reward -= 0.001
-
-        print(" step reward: %f " % reward)
-
-        return reward
-
-    def _get_obs(self):
-        # Execute arduino and speedController
-        components = [self.gyro, self.tachometer, self.image_analyzer, self.image_encoder, self.speed_controller]
-        for component in components:
-            component.execute()
+    def get_obs(self):
 
         gyro_value = self.get_gyro()
 
@@ -276,6 +231,31 @@ class SimuEnv(gym.Env):
 
         return ob
 
+    def get_reward(self, distance_to_walls):
+        """ Reward is given for XY. """
+        # TODO create real reward
+        # return self.delta_tacho - 1.0
+        current_pos = self.simulator.get_object_position(self.handles['base_car'])
+        if current_pos is None:
+            return 0.0
+        current_pos = np.array(current_pos)[1]
+        if self.last_current_pos is None:
+            self.last_current_pos = current_pos
+            return 0.0
+        reward = current_pos - self.last_current_pos
+        self.last_current_pos = current_pos
+
+        # Add a reward for keeping high distance to walls
+        reward += distance_to_walls - 0.62
+
+        # Add a constant penalty for each step (to minimize number of steps)
+        reward -= 0.001
+
+        print("\n")
+        print("Step reward: %f " % reward)
+
+        return reward
+
     def get_gyro(self):
         gyro_value = self.gyro.get_cap()
         return (gyro_value - self.min_gyro) / (self.max_gyro - self.min_gyro) * 100 - 50
@@ -284,7 +264,7 @@ class SimuEnv(gym.Env):
         tacho_value = self.tachometer.get_tacho()
         return tacho_value * (tacho_value - self.min_tacho) / (self.max_tacho - self.min_tacho) * 100 - 50
 
-    def _get_distance_with_walls(self):
+    def get_distance_with_walls(self):
         road_width = 1.5
         distance_int = self.simulator.get_distance(self.handles["body_chasis"], self.handles["int_wall"],
                                                    road_width / 2)
@@ -292,5 +272,5 @@ class SimuEnv(gym.Env):
                                                    road_width / 2)
         return min(distance_int, distance_ext)
 
-    def _check_collision_with_wall(self, distance):
+    def check_collision_with_wall(self, distance):
         return distance < 0.05
