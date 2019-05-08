@@ -175,7 +175,7 @@ class SimuEnv(gym.Env):
         # Put observations in a tensor
         return np.array([self.get_gyro(),
                          self.get_tacho(),
-                         self.gyro.get_cap(),
+                         self.gyro.get_delta_cap(),
                          self.tachometer.get_delta_tacho(),
                          self.steering,
                          self.speed,
