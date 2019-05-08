@@ -114,31 +114,3 @@ class ImageAnalyzer:
             result = result / 255.
 
             return result
-
-    # Tells if a new image has arrived
-    def isThereANewImage(self):
-        return True
-
-    def getPolyCoeff1(self):
-        pass
-
-    def getPolyCoeffConst(self):
-        pass
-
-    def getObstacleExists(self):
-        pass
-
-    def getPositionObstacle(self):
-        return 0
-
-    def getParallelism(self):
-        return 0
-
-    def getObstacleInBrakeZone(self):
-        return False
-
-    def getStartDetected(self):
-        pass
-
-    def unlockObstacle(self):
-        pass

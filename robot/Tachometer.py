@@ -32,3 +32,7 @@ class Tachometer:
 
     def get_tacho(self):
         return self.tacho
+
+    def reset(self):
+        self.tacho = 0
+        self.previous_pos = None

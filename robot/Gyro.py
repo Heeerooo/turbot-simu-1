@@ -22,3 +22,6 @@ class Gyro:
 
     def compute_gyro(self):
         self.gyro += self.get_gyro_variation_step()
+
+    def reset(self):
+        self.gyro = float(0)

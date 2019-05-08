@@ -10,7 +10,6 @@ from robot.Simulator import Simulator
 from robot.SpeedController import SpeedController
 from robot.Tachometer import Tachometer
 
-import time
 
 class SimuEnv(gym.Env):
     metadata = {'render.modes': ['human']}
@@ -47,7 +46,27 @@ class SimuEnv(gym.Env):
         self.gyro_name = "gyroZ"
 
         # Create robot control objects
-        self._recreate_components()
+        self.speed_controller = SpeedController(simulator=self.simulator,
+                                                motor_handles=[self.handles["left_motor"], self.handles["right_motor"]],
+                                                simulation_step_time=self.simulator.get_simulation_time_step())
+
+        self.image_analyzer = ImageAnalyzer(simulator=self.simulator,
+                                            cam_handle=self.handles["cam"])
+
+        self.image_encoder = ImageEncoder(image_analyzer=self.image_analyzer)
+
+        self.tachometer = Tachometer(simulator=self.simulator,
+                                     base_car=self.handles['base_car'])
+
+        self.gyro = Gyro(simulator=self.simulator,
+                         gyro_name=self.gyro_name)
+
+        self.car = Car(simulator=self.simulator,
+                       steering_handles=[self.handles["left_steering"], self.handles["right_steering"]],
+                       motors_handles=[self.handles["left_motor"], self.handles["right_motor"]],
+                       speed_controller=self.speed_controller,
+                       tachometer=self.tachometer,
+                       gyro=self.gyro)
 
         self.simulator.start_simulation()
 
@@ -137,8 +156,8 @@ class SimuEnv(gym.Env):
         # Send action to simulator
         ##############################
 
-        assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
-        if action ==   1:
+        assert self.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
+        if action == 1:
             self.speed += 5
         elif action == 2:
             self.speed -= 5
@@ -187,9 +206,12 @@ class SimuEnv(gym.Env):
 
         # Reset simulation
         self.simulator.teleport_to_start_pos()
+        self.simulator.do_simulation_step()
         self.steering = 0.0
         self.speed = 0.0
-        
+        self.gyro.reset()
+        self.tachometer.reset()
+
         self.last_current_pos = None
         # Create robot control objects
         # self._recreate_components()
@@ -217,19 +239,13 @@ class SimuEnv(gym.Env):
         reward = current_pos - self.last_current_pos
         self.last_current_pos = current_pos
 
-        # Hack to solve the issue of wrong reward when teleporting, because simulator communication is asynchronous
-        # TODO find a better way
-        if abs(reward - self.last_reward) > 2.0:
-            self.last_reward = 0.0
-            return 0.0
-
         # Add a reward for keeping high distance to walls
         reward += distance_to_walls - 0.62
 
         # Add a constant penalty for each step (to minimize number of steps)
         reward -= 0.001
 
-        self.last_reward = reward
+        print("step reward: %f " % reward)
 
         return reward
 
@@ -268,30 +284,6 @@ class SimuEnv(gym.Env):
         tacho_value = self.tachometer.get_tacho()
         return tacho_value * (tacho_value - self.min_tacho) / (self.max_tacho - self.min_tacho) * 100 - 50
 
-    def _recreate_components(self):
-
-        self.speed_controller = SpeedController(simulator=self.simulator,
-                                                motor_handles=[self.handles["left_motor"], self.handles["right_motor"]],
-                                                simulation_step_time=self.simulator.get_simulation_time_step())
-
-        self.image_analyzer = ImageAnalyzer(simulator=self.simulator,
-                                            cam_handle=self.handles["cam"])
-
-        self.image_encoder = ImageEncoder(image_analyzer=self.image_analyzer)
-
-        self.tachometer = Tachometer(simulator=self.simulator,
-                                     base_car=self.handles['base_car'])
-
-        self.gyro = Gyro(simulator=self.simulator,
-                         gyro_name=self.gyro_name)
-
-        self.car = Car(simulator=self.simulator,
-                       steering_handles=[self.handles["left_steering"], self.handles["right_steering"]],
-                       motors_handles=[self.handles["left_motor"], self.handles["right_motor"]],
-                       speed_controller=self.speed_controller,
-                       tachometer=self.tachometer,
-                       gyro=self.gyro)
-
     def _get_distance_with_walls(self):
         try:
             list1 = self.simulator.client.simxCheckDistance(self.handles["int_wall"], self.handles["body_chasis"], -1.0,
@@ -309,6 +301,6 @@ class SimuEnv(gym.Env):
             return min(dist1, dist2)
         else:
             return 0.75
-       
+
     def _check_collision_with_wall(self, distance):
         return distance < 0.05
