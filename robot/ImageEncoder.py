@@ -13,7 +13,7 @@ class ImageEncoder:
         self.model_path = model_path
         # Load model for encoding line images into features
         self.encoder_model = load_model(self.model_path)
-        self.encoded_image_line = None
+        self.encoded_image_line = np.zeros(self.nb_features_encoding)
 
     def get_nb_features_encoding(self):
         return self.nb_features_encoding

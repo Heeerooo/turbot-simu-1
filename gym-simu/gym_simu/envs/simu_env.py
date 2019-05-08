@@ -15,18 +15,6 @@ class SimuEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self):
-        self.speed_controller = None
-        self.image_analyzer = None
-        self.tachometer = None
-        self.gyro = None
-        self.car = None
-
-        # TODO remove these lines after creating real reward
-        self.old_tacho_value = 0
-        self.delta_tacho = 0
-        self.last_current_pos = None
-        self.last_reward = 0.0
-
         ###########################
         # Create and init simulator
         ###########################
@@ -73,7 +61,7 @@ class SimuEnv(gym.Env):
         ###############################
         # Create actions space
         ###############################
-
+        self.collision_distance = 0.05
         self.min_steering = -100.0
         self.max_steering = 100.0
         self.min_speed = 20.0
@@ -84,17 +72,31 @@ class SimuEnv(gym.Env):
         self.steering = 0.0
         self.speed = 0.0
 
-        self.viewer = None
+        ##############################
+        # Actions
+        ##############################
+        def nothing():
+            pass
 
-        # Action space
-        # 0: do nothing
-        # 1: +5 speed
-        # 2: -5 speed
-        # 3: +1 steering
-        # 4: +10 steering
-        # 5: -1 steering
-        # 6: -10 steering
-        self.action_space = spaces.Discrete(7)
+        def accelerate(value):
+            self.speed += value
+
+        def decelerate(value):
+            self.speed -= value
+
+        def turn(value):
+            self.steering += value
+
+        self.actions = {
+            0: (nothing, None),
+            1: (accelerate, 5),
+            2: (decelerate, 5),
+            3: (turn, 1),
+            4: (turn, 10),
+            5: (turn, -1),
+            6: (turn, -10),
+        }
+        self.action_space = spaces.Discrete(len(self.actions))
 
         ##############################
         # Create observations space
@@ -117,52 +119,16 @@ class SimuEnv(gym.Env):
         # Channel 4..: image encoded features
         self.observation_space = spaces.Box(low=-100.0, high=100.0, shape=(4 + self.nb_features,), dtype='float32')
 
-    def step(self, action):
-        """
 
-        Parameters
-        ----------
-        action :
 
-        Returns
-        -------
-        ob, reward, episode_over, info : tuple
-            ob (object) :
-                an environment-specific object representing your observation of
-                the environment.
-            reward (float) :
-                amount of reward achieved by the previous action. The scale
-                varies between environments, but the goal is always to increase
-                your total reward.
-            episode_over (bool) :
-                whether it's time to reset the environment again. Most (but not
-                all) tasks are divided up into well-defined episodes, and done
-                being True indicates the episode has terminated. (For example,
-                perhaps the pole tipped too far, or you lost your last life.)
-            info (dict) :
-                 diagnostic information useful for debugging. It can sometimes
-                 be useful for learning (for example, it might contain the raw
-                 probabilities behind the environment's last state change).
-                 However, official evaluations of your agent are not allowed to
-                 use this for learning.
-        """
+    def step(self, action_id):
         ##############################
         # Send action to simulator
         ##############################
+        assert self.action_space.contains(action_id), "%r (%s) invalid" % (action_id, type(action_id))
+        action_function, args = self.actions[action_id]
+        action_function(args) if args is not None else action_function()
 
-        assert self.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
-        if action == 1:
-            self.speed += 5
-        elif action == 2:
-            self.speed -= 5
-        elif action == 3:
-            self.steering += 1
-        elif action == 4:
-            self.steering += 10
-        elif action == 5:
-            self.steering -= 1
-        elif action == 6:
-            self.steering -= 10
         self.steering = np.clip(self.steering, self.min_steering, self.max_steering)
         self.speed = np.clip(self.speed, self.min_speed, self.max_speed)
         self.car.tourne(self.steering)
@@ -181,11 +147,8 @@ class SimuEnv(gym.Env):
         ####################################
 
         ob = self.get_obs()
-
         distance_to_walls = self.get_distance_with_walls()
-
         reward = self.get_reward(distance_to_walls)
-
         episode_over = self.check_collision_with_wall(distance_to_walls)
 
         return ob, reward, episode_over, {}
@@ -198,7 +161,7 @@ class SimuEnv(gym.Env):
         self.speed = 0.0
         self.gyro.reset()
         self.tachometer.reset()
-        self.last_current_pos = None
+        self.last_pos = None
 
         return self.get_obs()
 
@@ -209,27 +172,12 @@ class SimuEnv(gym.Env):
         pass
 
     def get_obs(self):
-
-        gyro_value = self.get_gyro()
-
-        tacho_value = self.get_tacho()
-
-        # TODO remove this and replace by real reward
-        self.delta_tacho = tacho_value - self.old_tacho_value
-        self.old_tacho_value = tacho_value
-
-        # Get camera image
-        image_line_encoded = self.image_encoder.get_encoded_image()
-
         # Put observations in a tensor
-        ob = np.zeros((4 + self.nb_features))
-        ob[0] = gyro_value
-        ob[1] = tacho_value
-        ob[2] = self.steering
-        ob[3] = self.speed
-        ob[4:] = image_line_encoded
-
-        return ob
+        return np.array([self.get_gyro(),
+                         self.get_tacho(),
+                         self.steering,
+                         self.speed,
+                         *self.image_encoder.get_encoded_image()])
 
     def get_reward(self, distance_to_walls):
         """ Reward is given for XY. """
@@ -239,20 +187,17 @@ class SimuEnv(gym.Env):
         if current_pos is None:
             return 0.0
         current_pos = np.array(current_pos)[1]
-        if self.last_current_pos is None:
-            self.last_current_pos = current_pos
+        if self.last_pos is None:
+            self.last_pos = current_pos
             return 0.0
-        reward = current_pos - self.last_current_pos
-        self.last_current_pos = current_pos
+        reward = current_pos - self.last_pos
+        self.last_pos = current_pos
 
         # Add a reward for keeping high distance to walls
         reward += distance_to_walls - 0.62
 
         # Add a constant penalty for each step (to minimize number of steps)
         reward -= 0.001
-
-        print("\n")
-        print("Step reward: %f " % reward)
 
         return reward
 
@@ -273,4 +218,4 @@ class SimuEnv(gym.Env):
         return min(distance_int, distance_ext)
 
     def check_collision_with_wall(self, distance):
-        return distance < 0.05
+        return distance < self.collision_distance
