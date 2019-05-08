@@ -35,8 +35,6 @@ for n in range(0, 50):
     while time.time() - start_time < simulation_duration_seconds:
         start_step_time = time.time()
         print("code execution time : %fs " % (time.time() - start_step_time))
-        print("distance to wall : %f " % simulator.get_distance(handles["body_chasis"], handles["ext_wall"], 0.5))
-        print("distance to wall : %f " % simulator.get_distance(handles["body_chasis"], handles["int_wall"], 0.5))
         simulator.set_target_pos(handles["right_steering"], steering)
         simulator.set_target_pos(handles["left_steering"], steering)
         simulator.set_target_speed(handles["left_motor"], speed)

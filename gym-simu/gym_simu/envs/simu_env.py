@@ -114,12 +114,12 @@ class SimuEnv(gym.Env):
         # Observations are encoded that way:
         # Channel 0: gyro
         # Channel 1: tacho
-        # Channel 2: target steering
-        # Channel 3: target speed
-        # Channel 4..: image encoded features
-        self.observation_space = spaces.Box(low=-100.0, high=100.0, shape=(4 + self.nb_features,), dtype='float32')
-
-
+        # Channel 2: delta gyro
+        # Channel 3: delta tacho
+        # Channel 4: target steering
+        # Channel 5: target speed
+        # Channel 6..: image encoded features
+        self.observation_space = spaces.Box(low=-100.0, high=100.0, shape=(6 + self.nb_features,), dtype='float32')
 
     def step(self, action_id):
         ##############################
@@ -175,6 +175,8 @@ class SimuEnv(gym.Env):
         # Put observations in a tensor
         return np.array([self.get_gyro(),
                          self.get_tacho(),
+                         self.gyro.get_cap(),
+                         self.tachometer.get_delta_tacho(),
                          self.steering,
                          self.speed,
                          *self.image_encoder.get_encoded_image()])
