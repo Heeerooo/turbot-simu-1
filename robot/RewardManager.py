@@ -18,6 +18,10 @@ class RewardManager:
         self.previous_pos = self.BEGIN_POS_PHASE_1
         self.phase = 1
 
+    def reset(self):
+        self.previous_pos = self.BEGIN_POS_PHASE_1
+        self.phase = 1
+
     def is_end_phase_1(self, pos):
         return self.phase == 1 and pos[1] >= self.END_Y_PHASE_1
 

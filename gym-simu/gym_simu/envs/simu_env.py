@@ -1,3 +1,5 @@
+import time
+
 import gym
 import numpy as np
 from gym import spaces
@@ -6,6 +8,7 @@ from robot.Car import Car
 from robot.Gyro import Gyro
 from robot.ImageAnalyzer import ImageAnalyzer
 from robot.ImageEncoder import ImageEncoder
+from robot.RewardManager import RewardManager
 from robot.Simulator import Simulator
 from robot.SpeedController import SpeedController
 from robot.Tachometer import Tachometer
@@ -56,6 +59,7 @@ class SimuEnv(gym.Env):
                        tachometer=self.tachometer,
                        gyro=self.gyro)
 
+        self.reward_manager = RewardManager()
         self.simulator.start_simulation()
 
         ###############################
@@ -66,11 +70,10 @@ class SimuEnv(gym.Env):
         self.max_steering = 100.0
         self.min_speed = 20.0
         self.max_speed = 100.0
-        self.coeff_action_steering = 1.0  # Multiplier (to adapt order of magnitude of actions)
-        self.coeff_action_speed = 2.0  # Multiplier (to adapt order of magnitude of actions)
-        self.center_speed = 50.0  # Medium speed
         self.steering = 0.0
-        self.speed = 0.0
+        self.speed = 20.0
+
+        self.resets_count = 0
 
         ##############################
         # Actions
@@ -111,6 +114,12 @@ class SimuEnv(gym.Env):
 
         self.nb_features = self.image_encoder.get_nb_features_encoding()  # Nb of features in the output of encoder
 
+        #execution times
+        self.times = []
+        self.rl_times = []
+        self.last_step_end_time = None
+        self.print_execution_times = False
+
         # Observations are encoded that way:
         # Channel 0: gyro
         # Channel 1: tacho
@@ -135,23 +144,25 @@ class SimuEnv(gym.Env):
         self.car.avance(self.speed)
 
         # Robot controls
-        components = [self.gyro, self.tachometer, self.image_analyzer, self.image_encoder, self.speed_controller]
+        self.speed_controller.execute()
+
+        if self.last_step_end_time is not None:
+            self.rl_times.append(time.time() - self.last_step_end_time)
+        # Execute simulation
+        start_time = time.time()
+        self.simulator.do_simulation_step()
+        self.times.append(time.time() - start_time)
+        self.last_step_end_time = time.time()
+
+        # Robot controls
+        components = [self.gyro, self.tachometer, self.image_analyzer, self.image_encoder]
         for component in components:
             component.execute()
-
-        # Execute simulation
-        self.simulator.do_simulation_step()
 
         ####################################
         # Get rendered values from simulator
         ####################################
-
-        ob = self.get_obs()
-        distance_to_walls = self.get_distance_with_walls()
-        reward = self.get_reward(distance_to_walls)
-        episode_over = self.check_collision_with_wall(distance_to_walls)
-
-        return ob, reward, episode_over, {}
+        return self.get_obs(), self.get_reward(), self.check_collision_with_wall(), {}
 
     def reset(self):
         # Reset simulation
@@ -161,8 +172,12 @@ class SimuEnv(gym.Env):
         self.speed = 0.0
         self.gyro.reset()
         self.tachometer.reset()
-        self.last_pos = None
-
+        self.reward_manager.reset()
+        if self.print_execution_times:
+            print("Mean simulator execution Time : %f" % np.mean(self.times))
+            print("Mean rl execution Time : %f" % np.mean(self.rl_times))
+        self.times = []
+        self.resets_count += 1
         return self.get_obs()
 
     def close(self):
@@ -181,22 +196,16 @@ class SimuEnv(gym.Env):
                          self.speed,
                          *self.image_encoder.get_encoded_image()])
 
-    def get_reward(self, distance_to_walls):
-        """ Reward is given for XY. """
-        # TODO create real reward
-        # return self.delta_tacho - 1.0
-        current_pos = self.simulator.get_object_position(self.handles['base_car'])
-        if current_pos is None:
-            return 0.0
-        current_pos = np.array(current_pos)[1]
-        if self.last_pos is None:
-            self.last_pos = current_pos
-            return 0.0
-        reward = current_pos - self.last_pos
-        self.last_pos = current_pos
+    def get_reward(self,):
 
-        # Add a reward for keeping high distance to walls
-        reward += distance_to_walls - 0.62
+        current_pos = self.simulator.get_object_position(self.handles['base_car'])
+        if current_pos is not None:
+            reward = self.reward_manager.get_reward(current_pos)
+        else:
+            reward = 0.0
+
+            # Add a reward for keeping high distance to walls
+        reward += self.get_distance_with_walls() - 0.62
 
         # Add a constant penalty for each step (to minimize number of steps)
         reward -= 0.001
@@ -219,5 +228,5 @@ class SimuEnv(gym.Env):
                                                    road_width / 2)
         return min(distance_int, distance_ext)
 
-    def check_collision_with_wall(self, distance):
-        return distance < self.collision_distance
+    def check_collision_with_wall(self):
+        return self.get_distance_with_walls() < self.collision_distance
