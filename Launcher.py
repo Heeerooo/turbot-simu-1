@@ -1,7 +1,7 @@
 import subprocess
 import time
 
-for i in range(10):
+for i in range(100):
     process = subprocess.Popen("python ../launch_turbodroid_simu_agent.py", shell=True)
     process.wait()
     print(process.returncode)

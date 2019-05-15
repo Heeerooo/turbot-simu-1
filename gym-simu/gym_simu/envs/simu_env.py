@@ -114,7 +114,7 @@ class SimuEnv(gym.Env):
 
         self.nb_features = self.image_encoder.get_nb_features_encoding()  # Nb of features in the output of encoder
 
-        #execution times
+        # execution times
         self.times = []
         self.rl_times = []
         self.last_step_end_time = None
@@ -196,15 +196,13 @@ class SimuEnv(gym.Env):
                          self.speed,
                          *self.image_encoder.get_encoded_image()])
 
-    def get_reward(self,):
+    def get_reward(self):
 
         current_pos = self.simulator.get_object_position(self.handles['base_car'])
-        if current_pos is not None:
-            reward = self.reward_manager.get_reward(current_pos)
-        else:
-            reward = 0.0
 
-            # Add a reward for keeping high distance to walls
+        reward = self.reward_manager.get_reward(current_pos) if current_pos is not None else 0.0
+
+        # Add a reward for keeping high distance to walls
         reward += self.get_distance_with_walls() - 0.62
 
         # Add a constant penalty for each step (to minimize number of steps)
