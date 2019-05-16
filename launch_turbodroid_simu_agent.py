@@ -40,7 +40,7 @@ class CustomRandomPolicy(EpsGreedyQPolicy):
     def __init__(self, eps=.1):
         super(CustomRandomPolicy, self).__init__(eps=eps)
         self.nb_without_action = 0  # Keeps the number of remaining steps without action to be taken
-        self.MAX_STEPS_WITHOUT_ACTION = 5
+        self.MAX_STEPS_WITHOUT_ACTION = 8
 
     def select_action(self, q_values):
         """Return the selected action
