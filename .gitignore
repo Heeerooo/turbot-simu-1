@@ -3,3 +3,4 @@ venv/*
 __pycache__/
 gym-simu/gym_simu.egg-info/
 checkPoints/
+dlls_windows_b0/
