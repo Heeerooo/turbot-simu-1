@@ -10,10 +10,10 @@ from keras.optimizers import Adam
 from rl.agents.dqn import DQNAgent
 from rl.memory import SequentialMemory
 from rl.policy import EpsGreedyQPolicy, LinearAnnealedPolicy
+from keras.callbacks import TensorBoard
 
 ENV_NAME = 'simu-v0'
 CHECKPOINT_WEIGHTS_FILE = 'dqn_simu-weights_checkpoint.h5f'
-FINAL_WEIGHTS_FILE = 'dqn_simu-weights_one.h5f'
 PARAMS_FILE = 'training_parameters.npy'
 
 # Constants for Annealed random policy
@@ -106,18 +106,19 @@ print("Epsilon: ", eps, "Next epsilon: ", next_eps)
 policy = LinearAnnealedPolicy(CustomRandomPolicy(), attr='eps', value_max=eps, value_min=next_eps, value_test=EPSILON_TEST, nb_steps=NUM_STEPS_BEFORE_RESET)
 
 dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=100,
-               target_model_update=1e-2, policy=policy)
+               target_model_update=10000, gamma=.99, policy=policy)
 dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
 if os.path.isfile(CHECKPOINT_WEIGHTS_FILE):
     dqn.load_weights(CHECKPOINT_WEIGHTS_FILE)
+    print("Checkpoint file loaded")
 
 # dqn.test(env, nb_episodes=5, visualize=False)
-
-dqn.fit(env, nb_steps=NUM_STEPS_BEFORE_RESET, visualize=False, verbose=1, nb_max_episode_steps=200)
+tbCallBack = TensorBoard(log_dir='./logs/model3')
+dqn.fit(env, nb_steps=NUM_STEPS_BEFORE_RESET, visualize=False, verbose=1, nb_max_episode_steps=200, callbacks=[tbCallBack])
 
 # After training is done, we save the final weights.
-dqn.save_weights(FINAL_WEIGHTS_FILE, overwrite=True)
+dqn.save_weights(CHECKPOINT_WEIGHTS_FILE, overwrite=True)
 
 # Save next epsilon to parameters file
 np.save(PARAMS_FILE, next_eps)
