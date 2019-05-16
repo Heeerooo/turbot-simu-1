@@ -66,8 +66,8 @@ class SimuEnv(gym.Env):
         # Create actions space
         ###############################
         self.collision_distance = 0.05
-        self.min_steering = -100.0
-        self.max_steering = 100.0
+        self.min_steering = -50.0   # TODO calibrate according to real car
+        self.max_steering = 50.0
         self.min_speed = 20.0
         self.max_speed = 100.0
         self.steering = 0.0
