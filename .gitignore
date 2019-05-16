@@ -4,3 +4,4 @@ __pycache__/
 gym-simu/gym_simu.egg-info/
 checkPoints/
 dlls_windows_b0/
+dll_for_simu_windows/
