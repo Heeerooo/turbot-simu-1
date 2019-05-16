@@ -12,6 +12,8 @@ from rl.memory import SequentialMemory
 from rl.policy import EpsGreedyQPolicy
 
 ENV_NAME = 'simu-v0'
+CHECKPOINT_WEIGHTS_FILE = 'dqn_simu-weights_checkpoint.h5f'
+FINAL_WEIGHTS_FILE = 'dqn_simu-weights_one.h5f'
 
 
 WINDOW_LENGTH = 4
@@ -44,15 +46,15 @@ dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmu
                target_model_update=1e-2, policy=policy)
 dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
-if os.path.isfile('dqn_simu-v0_weights_one.h5f'):
-    dqn.load_weights('dqn_simu-v0_weights_one.h5f')
+if os.path.isfile(CHECKPOINT_WEIGHTS_FILE):
+    dqn.load_weights(CHECKPOINT_WEIGHTS_FILE)
 
 dqn.test(env, nb_episodes=5, visualize=False)
 
 dqn.fit(env, nb_steps=40000, visualize=False, verbose=2, nb_max_episode_steps=200)
 
 # After training is done, we save the final weights.
-dqn.save_weights('dqn_simu-v0_weights_one.h5f', overwrite=True)
+dqn.save_weights(FINAL_WEIGHTS_FILE, overwrite=True)
 
 # Finally, evaluate our algorithm for 5 episodes.
 dqn.test(env, nb_episodes=5, visualize=False)
