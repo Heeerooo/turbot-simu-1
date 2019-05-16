@@ -14,6 +14,14 @@ from rl.policy import EpsGreedyQPolicy, LinearAnnealedPolicy
 ENV_NAME = 'simu-v0'
 CHECKPOINT_WEIGHTS_FILE = 'dqn_simu-weights_checkpoint.h5f'
 FINAL_WEIGHTS_FILE = 'dqn_simu-weights_one.h5f'
+PARAMS_FILE = 'training_parameters.npy'
+
+# Constants for Annealed random policy
+START_EPSILON = 1.0
+END_EPSILON = 0.1
+EPSILON_TEST = 0.05
+NUM_STEPS_ANNEALED = 1000000    # Nb steps to bring epsilon from start epsilon to end epsilon
+NUM_STEPS_BEFORE_RESET = 40000    # Reset every N steps because of memory leak
 
 WINDOW_LENGTH = 4
 
@@ -32,7 +40,7 @@ class CustomRandomPolicy(EpsGreedyQPolicy):
     def __init__(self, eps=.1):
         super(CustomRandomPolicy, self).__init__(eps=eps)
         self.nb_without_action = 0  # Keeps the number of remaining steps without action to be taken
-        self.MAX_STEPS_WITHOUT_ACTION = 8
+        self.MAX_STEPS_WITHOUT_ACTION = 5
 
     def select_action(self, q_values):
         """Return the selected action
@@ -84,9 +92,18 @@ print(model.summary())
 memory = SequentialMemory(limit=250000, window_length=WINDOW_LENGTH)
 # policy = BoltzmannQPolicy()
 # policy = EpsGreedyQPolicy(eps=0.1)
-# policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1., value_min=.1, value_test=.05, nb_steps=1000000)
 
-policy = CustomRandomPolicy(eps=1.0)
+# Load parameters from file if exists
+if os.path.isfile(PARAMS_FILE):
+    eps = np.load(PARAMS_FILE)
+else:
+    eps = START_EPSILON
+
+# policy = CustomRandomPolicy(eps=1.0)
+delta_eps = (START_EPSILON - END_EPSILON) * NUM_STEPS_BEFORE_RESET / NUM_STEPS_ANNEALED
+next_eps = max(eps - delta_eps, END_EPSILON)
+print("Epsilon: ", eps, "Next epsilon: ", next_eps)
+policy = LinearAnnealedPolicy(CustomRandomPolicy(), attr='eps', value_max=eps, value_min=next_eps, value_test=EPSILON_TEST, nb_steps=NUM_STEPS_BEFORE_RESET)
 
 dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=100,
                target_model_update=1e-2, policy=policy)
@@ -97,10 +114,13 @@ if os.path.isfile(CHECKPOINT_WEIGHTS_FILE):
 
 # dqn.test(env, nb_episodes=5, visualize=False)
 
-dqn.fit(env, nb_steps=40000, visualize=False, verbose=2, nb_max_episode_steps=200)
+dqn.fit(env, nb_steps=NUM_STEPS_BEFORE_RESET, visualize=False, verbose=1, nb_max_episode_steps=200)
 
 # After training is done, we save the final weights.
 dqn.save_weights(FINAL_WEIGHTS_FILE, overwrite=True)
+
+# Save next epsilon to parameters file
+np.save(PARAMS_FILE, next_eps)
 
 # Finally, evaluate our algorithm for 5 episodes.
 dqn.test(env, nb_episodes=5, visualize=False)
