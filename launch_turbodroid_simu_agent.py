@@ -1,6 +1,8 @@
 import os
 
 import gym
+import gym_simu
+
 import numpy as np
 from keras.layers import Dense, Activation, Flatten
 from keras.models import Sequential
