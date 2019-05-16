@@ -77,15 +77,15 @@ nb_actions = env.action_space.n
 # Next, we build a very simple model.
 model = Sequential()
 model.add(Flatten(input_shape=(WINDOW_LENGTH,) + env.observation_space.shape))
-model.add(Dense(16))
+model.add(Dense(64))
 model.add(Activation('relu'))
-model.add(Dense(16))
+model.add(Dense(64))
 model.add(Activation('relu'))
-model.add(Dense(16))
+model.add(Dense(64))
 model.add(Activation('relu'))
 model.add(Dense(nb_actions))
 model.add(Activation('linear'))
-print(model.summary())
+# print(model.summary())
 
 # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
 # even the metrics!
