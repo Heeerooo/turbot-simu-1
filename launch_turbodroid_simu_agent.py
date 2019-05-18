@@ -19,7 +19,7 @@ CHECKPOINT_WEIGHTS_FILE = 'dqn_simu-weights_checkpoint.h5f'
 PARAMS_FILE = 'training_parameters.npy'
 
 # Constants for Annealed random policy
-START_EPSILON = 0.8
+START_EPSILON = 1.0
 END_EPSILON = 0.1
 EPSILON_TEST = 0.05
 NUM_STEPS_ANNEALED = 1000000    # Nb steps to bring epsilon from start epsilon to end epsilon
@@ -73,7 +73,7 @@ if os.path.isfile(CHECKPOINT_WEIGHTS_FILE):
     print("Checkpoint file loaded")
 
 # dqn.test(env, nb_episodes=5, visualize=False)
-tbCallBack = TensorBoard(log_dir='./logs/model4')
+tbCallBack = TensorBoard(log_dir='./logs/model5')
 dqn.fit(env, nb_steps=NUM_STEPS_BEFORE_RESET, visualize=False, verbose=1, nb_max_episode_steps=200, callbacks=[tbCallBack])
 
 # After training is done, we save the final weights.
