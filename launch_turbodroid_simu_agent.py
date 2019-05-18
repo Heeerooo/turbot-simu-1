@@ -1,22 +1,25 @@
 import os
 
 import gym
+import gym_simu
+
 import numpy as np
 from keras.layers import Dense, Activation, Flatten
 from keras.models import Sequential
 from keras.optimizers import Adam
+from keras.callbacks import TensorBoard
 from rl.agents.dqn import DQNAgent
 from rl.memory import SequentialMemory
 from rl.policy import LinearAnnealedPolicy
 
-from rl.TurbodroidRandomPolicy import TurbodroidRandomPolicy
+from custom_policy.TurbodroidRandomPolicy import TurbodroidRandomPolicy
 
 ENV_NAME = 'simu-v0'
 CHECKPOINT_WEIGHTS_FILE = 'dqn_simu-weights_checkpoint.h5f'
 PARAMS_FILE = 'training_parameters.npy'
 
 # Constants for Annealed random policy
-START_EPSILON = 1.0
+START_EPSILON = 0.8
 END_EPSILON = 0.1
 EPSILON_TEST = 0.05
 NUM_STEPS_ANNEALED = 1000000    # Nb steps to bring epsilon from start epsilon to end epsilon
