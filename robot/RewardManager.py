@@ -4,9 +4,9 @@ import numpy as np
 class RewardManager:
     BEGIN_POS_PHASE_1 = [-2, 5, 0]
     BEGIN_POS_PHASE_2 = [-2, 23., 0]
-    BEGIN_POS_PHASE_3 = [2, 23., 0]
+    BEGIN_POS_PHASE_3 = [1, 23.5, 0]
     BEGIN_POS_PHASE_4 = [2, -23., 0]
-    BEGIN_POS_PHASE_5 = [-2, -23., 0]
+    BEGIN_POS_PHASE_5 = [-1, -23.5, 0]
 
     END_Y_PHASE_1 = BEGIN_POS_PHASE_2[1]
     END_X_PHASE_2 = BEGIN_POS_PHASE_3[0]
