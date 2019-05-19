@@ -23,6 +23,8 @@ handles = {
     "body_chasis": simulator.get_handle("body_chasis")
 }
 
+targets = {"virage", "start", "chicane"}
+
 gyro_name = "gyroZ"
 
 simulator.start_simulation()
@@ -42,5 +44,6 @@ for n in range(0, 50):
         start_simulator_step_time = time.time()
         simulator.do_simulation_step()
         print("simulator execution time : %fs " % (time.time() - start_simulator_step_time))
-    simulator.teleport_to_start_pos()
+    target = random.sample(targets, 1)[0]
+    simulator.teleport_to_target(target)
 simulator.stop_simulation()
