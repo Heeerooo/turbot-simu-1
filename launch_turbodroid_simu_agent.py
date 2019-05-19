@@ -1,15 +1,18 @@
 import os
 
 import gym
+import gym_simu
+
 import numpy as np
 from keras.layers import Dense, Activation, Flatten
 from keras.models import Sequential
 from keras.optimizers import Adam
+from keras.callbacks import TensorBoard
 from rl.agents.dqn import DQNAgent
 from rl.memory import SequentialMemory
 from rl.policy import LinearAnnealedPolicy
 
-from rl.TurbodroidRandomPolicy import TurbodroidRandomPolicy
+from custom_policy.TurbodroidRandomPolicy import TurbodroidRandomPolicy
 
 ENV_NAME = 'simu-v0'
 CHECKPOINT_WEIGHTS_FILE = 'dqn_simu-weights_checkpoint.h5f'
@@ -62,7 +65,7 @@ print("Epsilon: ", eps, "Next epsilon: ", next_eps)
 policy = LinearAnnealedPolicy(TurbodroidRandomPolicy(), attr='eps', value_max=eps, value_min=next_eps, value_test=EPSILON_TEST, nb_steps=NUM_STEPS_BEFORE_RESET)
 
 dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=100,
-               target_model_update=10000, gamma=.99, policy=policy)
+               target_model_update=1000, gamma=.99, policy=policy)
 dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
 if os.path.isfile(CHECKPOINT_WEIGHTS_FILE):
@@ -70,7 +73,7 @@ if os.path.isfile(CHECKPOINT_WEIGHTS_FILE):
     print("Checkpoint file loaded")
 
 # dqn.test(env, nb_episodes=5, visualize=False)
-tbCallBack = TensorBoard(log_dir='./logs/model3')
+tbCallBack = TensorBoard(log_dir='./logs/model5')
 dqn.fit(env, nb_steps=NUM_STEPS_BEFORE_RESET, visualize=False, verbose=1, nb_max_episode_steps=200, callbacks=[tbCallBack])
 
 # After training is done, we save the final weights.

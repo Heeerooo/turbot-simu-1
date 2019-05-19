@@ -2,10 +2,10 @@ import numpy as np
 
 
 class RewardManager:
-    BEGIN_POS_PHASE_1 = [-1, 5, 0]
-    BEGIN_POS_PHASE_2 = [-1, 23.5, 0]
+    BEGIN_POS_PHASE_1 = [-2, 5, 0]
+    BEGIN_POS_PHASE_2 = [-2, 23., 0]
     BEGIN_POS_PHASE_3 = [1, 23.5, 0]
-    BEGIN_POS_PHASE_4 = [1, -23.5, 0]
+    BEGIN_POS_PHASE_4 = [2, -23., 0]
     BEGIN_POS_PHASE_5 = [-1, -23.5, 0]
 
     END_Y_PHASE_1 = BEGIN_POS_PHASE_2[1]
@@ -39,7 +39,6 @@ class RewardManager:
 
     def get_reward(self, pos):
         reward = 0.0
-
         if self.is_end_phase_1(pos):
             self.phase += 1
             reward += self.END_Y_PHASE_1 - self.previous_pos[1]
@@ -50,7 +49,7 @@ class RewardManager:
             self.previous_pos = self.BEGIN_POS_PHASE_3
         elif self.is_end_phase_3(pos):
             self.phase += 1
-            reward += self.END_Y_PHASE_3 - self.previous_pos[0]
+            reward += self.END_Y_PHASE_3 - self.previous_pos[1]
             self.previous_pos = self.BEGIN_POS_PHASE_4
         elif self.is_end_phase_4(pos):
             self.phase += 1
@@ -58,7 +57,7 @@ class RewardManager:
             self.previous_pos = self.BEGIN_POS_PHASE_5
         elif self.is_end_phase_5(pos):
             self.phase = 0
-            reward += self.END_Y_PHASE_5 - self.previous_pos[0]
+            reward += self.END_Y_PHASE_5 - self.previous_pos[1]
             self.previous_pos = self.BEGIN_POS_PHASE_1
 
         delta_pos = np.array(pos) - np.array(self.previous_pos)
@@ -75,5 +74,6 @@ class RewardManager:
         elif self.phase == 5:
             reward += delta_pos[1]
 
+        # print("Phase: ", self.phase, "Reward: ", reward)
 
         return reward

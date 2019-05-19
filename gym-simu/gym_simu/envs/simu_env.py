@@ -203,11 +203,12 @@ class SimuEnv(gym.Env):
         reward = self.reward_manager.get_reward(current_pos) if current_pos is not None else 0.0
 
         # Add a reward for keeping high distance to walls
-        reward += self.get_distance_with_walls() - 0.62
+        reward += (self.get_distance_with_walls() - 0.62) / 4.
 
         # Add a constant penalty for each step (to minimize number of steps)
         reward -= 0.001
 
+        # print("Reward: ", reward)
         return reward
 
     def get_gyro(self):
