@@ -14,6 +14,8 @@ class RewardManager:
     END_X_PHASE_4 = BEGIN_POS_PHASE_5[0]
     END_Y_PHASE_5 = BEGIN_POS_PHASE_1[1]
 
+    BONUS_PHASE = 2.0   # Bonus reward when end of phase achieved
+
     def __init__(self):
         self.previous_pos = self.BEGIN_POS_PHASE_1
         self.phase = 1
@@ -42,22 +44,27 @@ class RewardManager:
         if self.is_end_phase_1(pos):
             self.phase += 1
             reward += self.END_Y_PHASE_1 - self.previous_pos[1]
+            reward += self.BONUS_PHASE
             self.previous_pos = self.BEGIN_POS_PHASE_2
         elif self.is_end_phase_2(pos):
             self.phase += 1
             reward += self.END_X_PHASE_2 - self.previous_pos[0]
+            reward += self.BONUS_PHASE
             self.previous_pos = self.BEGIN_POS_PHASE_3
         elif self.is_end_phase_3(pos):
             self.phase += 1
             reward += self.END_Y_PHASE_3 - self.previous_pos[1]
+            reward += self.BONUS_PHASE
             self.previous_pos = self.BEGIN_POS_PHASE_4
         elif self.is_end_phase_4(pos):
             self.phase += 1
             reward += self.END_X_PHASE_4 - self.previous_pos[0]
+            reward += self.BONUS_PHASE
             self.previous_pos = self.BEGIN_POS_PHASE_5
         elif self.is_end_phase_5(pos):
             self.phase = 0
             reward += self.END_Y_PHASE_5 - self.previous_pos[1]
+            reward += self.BONUS_PHASE
             self.previous_pos = self.BEGIN_POS_PHASE_1
 
         delta_pos = np.array(pos) - np.array(self.previous_pos)

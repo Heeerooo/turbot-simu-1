@@ -22,9 +22,9 @@ PARAMS_FILE = 'training_parameters.npy'
 START_EPSILON = 1.0
 END_EPSILON = 0.1
 EPSILON_TEST = 0.05
-NUM_STEPS_ANNEALED = 1000000    # Nb steps to bring epsilon from start epsilon to end epsilon
+NUM_STEPS_ANNEALED = 1500000    # Nb steps to bring epsilon from start epsilon to end epsilon
 NUM_STEPS_BEFORE_RESET = 40000    # Reset every N steps because of memory leak
-WINDOW_LENGTH = 4
+WINDOW_LENGTH = 2
 
 # for i in range(10):
 env = gym.make(ENV_NAME)
@@ -36,11 +36,11 @@ nb_actions = env.action_space.n
 # Next, we build a very simple model.
 model = Sequential()
 model.add(Flatten(input_shape=(WINDOW_LENGTH,) + env.observation_space.shape))
-model.add(Dense(64))
+model.add(Dense(128))
 model.add(Activation('relu'))
-model.add(Dense(64))
+model.add(Dense(128))
 model.add(Activation('relu'))
-model.add(Dense(64))
+model.add(Dense(128))
 model.add(Activation('relu'))
 model.add(Dense(nb_actions))
 model.add(Activation('linear'))
@@ -73,7 +73,7 @@ if os.path.isfile(CHECKPOINT_WEIGHTS_FILE):
     print("Checkpoint file loaded")
 
 # dqn.test(env, nb_episodes=5, visualize=False)
-tbCallBack = TensorBoard(log_dir='./logs/model5')
+tbCallBack = TensorBoard(log_dir='./logs/model7')
 dqn.fit(env, nb_steps=NUM_STEPS_BEFORE_RESET, visualize=False, verbose=1, nb_max_episode_steps=200, callbacks=[tbCallBack])
 
 # After training is done, we save the final weights.

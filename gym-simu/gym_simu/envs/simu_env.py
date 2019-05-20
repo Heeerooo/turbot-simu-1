@@ -71,7 +71,7 @@ class SimuEnv(gym.Env):
         self.min_speed = 20.0
         self.max_speed = 100.0
         self.steering = 0.0
-        self.speed = 20.0
+        self.speed = 25.0
 
         self.resets_count = 0
 
@@ -90,15 +90,24 @@ class SimuEnv(gym.Env):
         def turn(value):
             self.steering += value
 
+        # self.actions = {
+        #     0: (nothing, None),
+        #     1: (accelerate, 5),
+        #     2: (decelerate, 5),
+        #     3: (turn, 1),
+        #     4: (turn, 10),
+        #     5: (turn, -1),
+        #     6: (turn, -10),
+        # }
+
         self.actions = {
             0: (nothing, None),
-            1: (accelerate, 5),
-            2: (decelerate, 5),
-            3: (turn, 1),
-            4: (turn, 10),
-            5: (turn, -1),
-            6: (turn, -10),
+            1: (turn, 1),
+            2: (turn, 10),
+            3: (turn, -1),
+            4: (turn, -10)
         }
+
         self.action_space = spaces.Discrete(len(self.actions))
 
         ##############################
@@ -203,10 +212,10 @@ class SimuEnv(gym.Env):
         reward = self.reward_manager.get_reward(current_pos) if current_pos is not None else 0.0
 
         # Add a reward for keeping high distance to walls
-        reward += (self.get_distance_with_walls() - 0.62) / 4.
+        # reward += (self.get_distance_with_walls() - 0.62) / 4.
 
         # Add a constant penalty for each step (to minimize number of steps)
-        reward -= 0.001
+        # reward -= 0.001
 
         # print("Reward: ", reward)
         return reward
