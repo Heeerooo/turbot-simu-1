@@ -175,7 +175,7 @@ class SimuEnv(gym.Env):
 
     def reset(self):
         # Reset simulation
-        self.simulator.teleport_to_start_pos()
+        self.simulator.teleport_to_target("virage")
         self.simulator.do_simulation_step()
         self.steering = 0.0
         self.speed = 0.0
