@@ -174,8 +174,13 @@ class SimuEnv(gym.Env):
         return self.get_obs(), self.get_reward(), self.check_collision_with_wall(), {}
 
     def reset(self):
-        # Reset simulation
-        self.simulator.teleport_to_target("virage")
+        '''
+        reset simulation
+        '''
+        # Teleport to random starting point
+        targets = ["virage", "start", "chicane"]
+        target = targets[np.random.randint(0, 3)]
+        self.simulator.teleport_to_target(target)
         self.simulator.do_simulation_step()
         self.steering = 0.0
         self.speed = 0.0
