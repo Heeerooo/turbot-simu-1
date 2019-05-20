@@ -186,7 +186,7 @@ class SimuEnv(gym.Env):
         self.speed = 0.0
         self.gyro.reset()
         self.tachometer.reset()
-        self.reward_manager.reset()
+        self.reward_manager.reset(target)
         if self.print_execution_times:
             print("Mean simulator execution Time : %f" % np.mean(self.times))
             print("Mean rl execution Time : %f" % np.mean(self.rl_times))

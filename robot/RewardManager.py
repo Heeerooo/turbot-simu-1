@@ -20,9 +20,18 @@ class RewardManager:
         self.previous_pos = self.BEGIN_POS_PHASE_1
         self.phase = 1
 
-    def reset(self):
-        self.previous_pos = self.BEGIN_POS_PHASE_1
-        self.phase = 1
+    def reset(self, target):
+        if target=="virage":
+            self.previous_pos = self.BEGIN_POS_PHASE_2
+            self.phase = 2
+        elif target=="start":
+            self.previous_pos = self.BEGIN_POS_PHASE_1
+            self.phase = 1
+        elif target=="chicane":
+            self.previous_pos = self.BEGIN_POS_PHASE_3
+            self.phase = 3
+        else:
+            raise Exception("Unknown target: ", target, " in RewardManager.reset()")
 
     def is_end_phase_1(self, pos):
         return self.phase == 1 and pos[1] >= self.END_Y_PHASE_1
