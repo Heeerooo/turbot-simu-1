@@ -100,12 +100,18 @@ class SimuEnv(gym.Env):
         #     6: (turn, -10),
         # }
 
+        # self.actions = {
+        #     0: (nothing, None),
+        #     1: (turn, 1),
+        #     2: (turn, 10),
+        #     3: (turn, -1),
+        #     4: (turn, -10)
+        # }
+
         self.actions = {
             0: (nothing, None),
-            1: (turn, 1),
-            2: (turn, 10),
-            3: (turn, -1),
-            4: (turn, -10)
+            1: (turn, 3),
+            2: (turn, -3),
         }
 
         self.action_space = spaces.Discrete(len(self.actions))
@@ -140,6 +146,13 @@ class SimuEnv(gym.Env):
         self.observation_space = spaces.Box(low=-100.0, high=100.0, shape=(6 + self.nb_features,), dtype='float32')
 
     def step(self, action_id):
+        # Stabilize steering (bring it back progressively to zero)
+        delta_st = 1
+        if self.steering > delta_st:
+            self.steering -= 1
+        elif self.steering < - delta_st:
+            self.steering += 1
+
         ##############################
         # Send action to simulator
         ##############################
