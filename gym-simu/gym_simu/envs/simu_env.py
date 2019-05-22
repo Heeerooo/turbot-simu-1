@@ -230,7 +230,7 @@ class SimuEnv(gym.Env):
         reward = self.reward_manager.get_reward(current_pos) if current_pos is not None else 0.0
 
         # Add a reward for keeping high distance to walls
-        # reward += (self.get_distance_with_walls() - 0.62) / 4.
+        reward += (self.get_distance_with_walls() - 0.62) * 0.2
 
         # Add a constant penalty for each step (to minimize number of steps)
         # reward -= 0.001
