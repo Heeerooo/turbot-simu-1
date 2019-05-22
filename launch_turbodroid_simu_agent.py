@@ -68,7 +68,7 @@ policy = LinearAnnealedPolicy(TurbodroidPolicyRepeat(), attr='eps', value_max=ep
 
 dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=100,
                train_interval=1, target_model_update=1000, gamma=.99, policy=policy)
-dqn.compile(Adam(lr=.001), metrics=['mae', 'loss', 'mean_q'])
+dqn.compile(Adam(lr=.00025), metrics=['mae'])
 
 if os.path.isfile(CHECKPOINT_WEIGHTS_FILE):
     dqn.load_weights(CHECKPOINT_WEIGHTS_FILE)
