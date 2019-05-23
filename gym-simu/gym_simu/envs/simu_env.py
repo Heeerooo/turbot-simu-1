@@ -147,11 +147,11 @@ class SimuEnv(gym.Env):
 
     def step(self, action_id):
         # Stabilize steering (bring it back progressively to zero)
-        delta_st = 1
-        if self.steering > delta_st:
-            self.steering -= 1
-        elif self.steering < - delta_st:
-            self.steering += 1
+        # delta_st = 1
+        # if self.steering > delta_st:
+        #     self.steering -= 1
+        # elif self.steering < - delta_st:
+        #     self.steering += 1
 
         ##############################
         # Send action to simulator
@@ -230,12 +230,16 @@ class SimuEnv(gym.Env):
         reward = self.reward_manager.get_reward(current_pos) if current_pos is not None else 0.0
 
         # Add a reward for keeping high distance to walls
-        reward += (self.get_distance_with_walls() - 0.62) * 0.2
+        reward += (self.get_distance_with_walls() - 0.62) * 0.4
 
         # Add a constant penalty for each step (to minimize number of steps)
         # reward -= 0.001
 
         # print("Reward: ", reward)
+
+        # Prevent reward from becoming negative, and always give a small reward for a step
+        reward = max(reward, 0.005)
+
         return reward
 
     def get_gyro(self):
