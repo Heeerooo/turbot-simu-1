@@ -21,7 +21,7 @@ START_EPSILON = 1.0
 END_EPSILON = 0.1
 EPSILON_TEST = 0.05
 NUM_STEPS_ANNEALED = 2000000    # Nb steps to bring epsilon from start epsilon to end epsilon
-NUM_STEPS_BEFORE_RESET = 40000    # Reset every N steps because of memory leak
+NUM_STEPS_BEFORE_RESET = 1000    # Reset every N steps because of memory leak
 WINDOW_LENGTH = 4
 
 # for i in range(10):

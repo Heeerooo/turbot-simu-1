@@ -75,5 +75,6 @@ for i in range(0, memory.nb_entries):
     dqn.recent_action = memory.actions[i]
     dqn.recent_observation = memory.observations[i]
     dqn.backward(memory.rewards[i], memory.terminals[i])
+    print(i)
 
 env.close()
