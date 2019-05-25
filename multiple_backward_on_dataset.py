@@ -69,11 +69,16 @@ if os.path.isfile(CHECKPOINT_WEIGHTS_FILE):
 
 memory.load()
 
-tbCallBack = TensorBoard(log_dir='./logs/model10_wall_penalty0.4_without_ressort_steering')
+tbCallBack = TensorBoard(log_dir='./logs/test_async_training')
 
 for i in range(0, memory.nb_entries):
     dqn.recent_action = memory.actions[i]
     dqn.recent_observation = memory.observations[i]
-    dqn.backward(memory.rewards[i], memory.terminals[i])
+    metrics = dqn.backward(memory.rewards[i], memory.terminals[i])
+
+    step_logs = {
+        'metrics': metrics,
+    }
+    tbCallBack.on_batch_end(i, step_logs)
 
 env.close()

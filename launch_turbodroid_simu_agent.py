@@ -1,6 +1,7 @@
 import os
 
 import gym
+import gym_simu
 import numpy as np
 from keras.callbacks import TensorBoard
 from keras.layers import Dense, Activation, Flatten
