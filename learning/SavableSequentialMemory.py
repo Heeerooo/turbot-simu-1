@@ -14,7 +14,7 @@ class SavableSequentialMemory(SequentialMemory):
         if os.path.isfile('dqn_simu_memory.npz'):
             loaded = np.load("dqn_simu_memory.npz")
             memory = loaded["memory"]
-            lenght = loaded["lenght"]
+            lenght = len(memory[0])
             self.actions.length = lenght
             self.rewards.length = lenght
             self.terminals.length = lenght
@@ -26,8 +26,8 @@ class SavableSequentialMemory(SequentialMemory):
             print("Memory loaded")
 
     def save(self):
-        memory = [self.actions.data[:self.nb_entries], self.rewards.data[:self.nb_entries],
-                  self.terminals.data[:self.nb_entries], self.observations.data[:self.nb_entries]]
-        np.savez_compressed("dqn_simu_memory.npz", memory=memory, lenght=self.nb_entries)
+        memory = np.array([self.actions.data[:self.nb_entries], self.rewards.data[:self.nb_entries],
+                  self.terminals.data[:self.nb_entries], self.observations.data[:self.nb_entries]])
+        np.savez_compressed("dqn_simu_memory.npz", memory=memory)
         print("Memory saved")
 
