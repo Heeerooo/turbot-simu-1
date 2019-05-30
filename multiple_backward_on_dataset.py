@@ -257,8 +257,8 @@ tbCallBack.on_train_begin()
 nb_entries = memory.nb_entries
 indexes = list(range(memory.window_length, nb_entries - 1))
 nb_entries_train = int(nb_entries * 2 / 3)
-indexes_train = indexes[:nb_entries_train]
-indexes_val = indexes[nb_entries_train:]
+indexes_train = indexes[:nb_entries_train].copy()
+indexes_val = indexes[nb_entries_train:].copy()
 
 print("Size of dataset: ", nb_entries)
 
