@@ -51,14 +51,14 @@ memory = SavableSequentialMemory(limit=250000, filename="dqn_simu_memory.npz", w
 
 class CustomDQNAgent(DQNAgent):
 
-    def backward_without_memory(self, reward, terminal):
+    def backward_without_memory(self, batch_indexes):
 
         metrics = [np.nan for _ in self.metrics_names]
 
         # TODO I removed a if here, check if needed
 
         # Train the network on a single stochastic batch.
-        experiences = self.memory.sample(self.batch_size)
+        experiences = self.memory.sample(self.batch_size, batch_idxs = batch_indexes)
         assert len(experiences) == self.batch_size
 
         # Start by extracting the necessary parameters (we use a vectorized implementation).
@@ -141,6 +141,8 @@ class CustomDQNAgent(DQNAgent):
 
         return metrics
 
+
+
 # Load parameters from file if exists
 if os.path.isfile(PARAMS_FILE):
     eps = np.load(PARAMS_FILE)
@@ -163,13 +165,13 @@ if os.path.isfile(CHECKPOINT_WEIGHTS_FILE):
 
 memory.load()
 
-tbCallBack = TensorBoard(log_dir='./logs/test_async_training4')
+tbCallBack = TensorBoard(log_dir='./logs/test_async_training5')
 tbCallBack.set_model(model)
 tbCallBack.on_train_begin()
 
 # Train / test split
 nb_entries = memory.nb_entries
-indexes = list(range(nb_entries))
+indexes = list(range(memory.window_length, nb_entries - 1))
 nb_entries_train = int(nb_entries * 2 / 3)
 indexes_train = indexes[:nb_entries_train]
 indexes_val = indexes[nb_entries_train:]
@@ -186,12 +188,17 @@ for j in range(1000):
 
     print("Training on ", len(indexes_train), " train indexes")
 
-    for i in indexes_train:
-        dqn.recent_action = memory.actions[i]
-        dqn.recent_observation = memory.observations[i]
+    batch_indexes = []
 
-        metrics = dqn.backward_without_memory(memory.rewards[i], memory.terminals[i])
-        metrics_list.append(metrics)
+    for i in indexes_train:
+        if len(batch_indexes) < dqn.batch_size:
+            batch_indexes.append(i)
+        else:
+            metrics = dqn.backward_without_memory(batch_indexes)
+            metrics_list.append(metrics)
+
+            # Reset batch_indexes
+            batch_indexes = []
 
     # Update target_model
     dqn.update_target_model_hard()
