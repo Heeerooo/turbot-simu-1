@@ -9,6 +9,7 @@ from keras.models import Sequential
 from keras.optimizers import Adam
 from rl.agents.dqn import DQNAgent
 from rl.policy import LinearAnnealedPolicy
+import random
 
 from learning.SavableSequentialMemory import SavableSequentialMemory
 from learning.TurbodroidRandomPolicy import TurbodroidPolicyRepeat
@@ -166,16 +167,34 @@ tbCallBack = TensorBoard(log_dir='./logs/test_async_training4')
 tbCallBack.set_model(model)
 tbCallBack.on_train_begin()
 
+# Train / test split
+nb_entries = memory.nb_entries
+indexes = list(range(nb_entries))
+nb_entries_train = int(nb_entries * 2 / 3)
+indexes_train = indexes[:nb_entries_train]
+indexes_val = indexes[nb_entries_train:]
+
+print("Size of dataset: ", nb_entries)
+
 for j in range(1000):
     print("Epoch ", j)
     metrics_list = []
-    tbCallBack.on_epoch_begin(j)
-    for i in range(0, memory.nb_entries):
+    tbCallBack.on_epoch_begin(j)    
+
+    # Shuffle train indexes
+    random.shuffle(indexes_train)
+
+    print("Training on ", len(indexes_train), " train indexes")
+
+    for i in indexes_train:
         dqn.recent_action = memory.actions[i]
         dqn.recent_observation = memory.observations[i]
 
         metrics = dqn.backward_without_memory(memory.rewards[i], memory.terminals[i])
         metrics_list.append(metrics)
+
+    # Update target_model
+    dqn.update_target_model_hard()
         
     # Compute mean of metrics for epoch
     epoch_metrics = np.array(metrics_list).mean(axis=0)
