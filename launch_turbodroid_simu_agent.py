@@ -1,16 +1,14 @@
 import os
 
 import gym
-import gym_simu
 import numpy as np
 from keras.callbacks import TensorBoard
-from keras.layers import Dense, Activation, Flatten
-from keras.models import Sequential
 from keras.optimizers import Adam
 from rl.agents.dqn import DQNAgent
 from rl.policy import LinearAnnealedPolicy
 
 from learning.SavableSequentialMemory import SavableSequentialMemory
+from learning.TurbodroidModel import TurbodroidModel
 from learning.TurbodroidRandomPolicy import TurbodroidPolicyRepeat
 
 ENV_NAME = 'simu-v0'
@@ -33,16 +31,7 @@ env.seed(123)
 nb_actions = env.action_space.n
 
 # Next, we build a very simple model.
-model = Sequential()
-model.add(Flatten(input_shape=(WINDOW_LENGTH,) + env.observation_space.shape))
-model.add(Dense(128))
-model.add(Activation('relu'))
-model.add(Dense(256))
-model.add(Activation('relu'))
-model.add(Dense(512))
-model.add(Activation('relu'))
-model.add(Dense(nb_actions))
-model.add(Activation('linear'))
+model = TurbodroidModel(WINDOW_LENGTH, env.observation_space.shape, nb_actions).get()
 # print(model.summary())
 
 # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and

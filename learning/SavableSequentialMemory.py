@@ -1,19 +1,18 @@
 import os
-
-from rl.memory import SequentialMemory
 import pickle
 
-class SavableSequentialMemory(SequentialMemory):
+from rl.memory import SequentialMemory
 
-    FILENAME = "dqn_simu_memory.pickle"
+
+class SavableSequentialMemory(SequentialMemory):
 
     def __init__(self, limit, filename, **kwargs):
         super().__init__(limit, **kwargs)
         self.filename = filename
 
     def load(self):
-        if os.path.isfile(self.FILENAME):
-            with open(self.FILENAME, 'rb') as handle:
+        if os.path.isfile(self.filename):
+            with open(self.filename, 'rb') as handle:
                 loaded = pickle.load(handle)
                 lenght = len(loaded['actions'])
                 self.actions.length = lenght
@@ -33,7 +32,7 @@ class SavableSequentialMemory(SequentialMemory):
             'terminals': self.terminals.data[:self.nb_entries],
             'observations': self.observations.data[:self.nb_entries]
         }
-        with open(self.FILENAME, 'wb') as handle:
+        with open(self.filename, 'wb') as handle:
             pickle.dump(memory, handle)
 
         print("Memory saved")

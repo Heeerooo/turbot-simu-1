@@ -199,6 +199,7 @@ class SimuEnv(gym.Env):
         pass
 
     def get_obs(self):
+        print(" \n  Delta tacho %f \n Delta gyro %f" % (self.tachometer.get_delta_tacho(), self.gyro.get_delta_cap()))
         # Put observations in a tensor
         return np.array([self.get_gyro(),
                          self.get_tacho(),
