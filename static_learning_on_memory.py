@@ -100,4 +100,5 @@ for j in range(1000):
     tbCallBack.on_epoch_end(j, logs=epoch_logs)
 
 tbCallBack.on_train_end(None)
+dqn.save_weights(CHECKPOINT_WEIGHTS_FILE, overwrite=True)
 env.close()
