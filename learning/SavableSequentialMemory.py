@@ -37,3 +37,23 @@ class SavableSequentialMemory(SequentialMemory):
 
         print("Memory saved")
 
+    def append(self, observation, action, reward, terminal, training=True):
+        """Append an observation to the memory
+
+        We override the parent method because we want to save data to memory even in test mode.
+
+        # Argument
+            observation (dict): Observation returned by environment
+            action (int): Action taken to obtain this observation
+            reward (float): Reward obtained by taking this action
+            terminal (boolean): Is the state terminal
+        """ 
+        super(SavableSequentialMemory, self).append(observation, action, reward, terminal, training=training)
+        
+        # This needs to be understood as follows: in `observation`, take `action`, obtain `reward`
+        # and weather the next state is `terminal` or not.
+        self.observations.append(observation)
+        self.actions.append(action)
+        self.rewards.append(reward)
+        self.terminals.append(terminal)        
+
