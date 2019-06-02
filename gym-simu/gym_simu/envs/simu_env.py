@@ -224,7 +224,7 @@ class SimuEnv(gym.Env):
         # print("Reward: ", reward)
 
         # Prevent reward from becoming negative, and always give a small reward for a step
-        reward = max(reward, 0.005)
+        reward = max(reward, 0.0005)
 
         return reward
 
