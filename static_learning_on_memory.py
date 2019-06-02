@@ -17,13 +17,13 @@ CHECKPOINT_WEIGHTS_FILE = 'dqn_simu-weights_checkpoint.h5f'
 PARAMS_FILE = 'training_parameters.npy'
 MEMORY_FILE= 'dqn_simu_memory.pickle'
 
-NB_EPOCHS = 50
+NB_EPOCHS = 100
 
 # Constants for Annealed random policy
 START_EPSILON = 1.0
 END_EPSILON = 0.1
 EPSILON_DECAY = 0.05  # Decay of epsilon at each step
-NUM_EPISODES_PER_LOOP = 50  # Nb of episodes to generate in each dataset
+NUM_EPISODES_PER_LOOP = 100  # Nb of episodes to generate in each dataset
 WINDOW_LENGTH = 4
 
 
@@ -67,7 +67,7 @@ policy = TurbodroidPolicyRepeatVariant(eps=eps)
 dqn = StaticDQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=100,
                      train_interval=1, target_model_update=0.1, gamma=.93, test_policy=policy)
 
-dqn.compile(Adam(lr=.00025), metrics=['mae'])
+dqn.compile(Adam(lr=.0000025), metrics=['mae'])
 
 # Load model previously saved if exists
 if os.path.isfile(CHECKPOINT_WEIGHTS_FILE):
@@ -91,7 +91,7 @@ print("Memory length: ", memory.actions.length )
 ################################
 
 # Initialize Tensorboard
-tbCallBack = TensorBoard(log_dir='./logs/test_async_training6')
+tbCallBack = TensorBoard(log_dir='./logs/test_async_training7')
 tbCallBack.set_model(model)
 tbCallBack.on_train_begin()
 
