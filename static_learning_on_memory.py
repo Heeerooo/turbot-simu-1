@@ -16,8 +16,9 @@ ENV_NAME = 'simu-v0'
 CHECKPOINT_WEIGHTS_FILE = 'dqn_simu-weights_checkpoint.h5f'
 PARAMS_FILE = 'training_parameters.npy'
 MEMORY_FILE= 'dqn_simu_memory.pickle'
+TENSORBOARD_LOG_DIR = './logs/test_async_training8'
 
-NB_EPOCHS = 100
+NB_EPOCHS = 50
 
 # Constants for Annealed random policy
 START_EPSILON = 1.0
@@ -42,7 +43,7 @@ nb_actions = env.action_space.n
 model = TurbodroidModel(WINDOW_LENGTH, env.observation_space.shape, nb_actions).get()
 
 # Create the memory object
-memory = SavableSequentialMemory(limit=250000, filename=MEMORY_FILE, window_length=WINDOW_LENGTH)
+memory = SavableSequentialMemory(limit=10000000, filename=MEMORY_FILE, window_length=WINDOW_LENGTH)
 
 ################################
 # Create the policy
@@ -95,14 +96,14 @@ memory.save()
 ################################
 
 # Initialize Tensorboard
-tbCallBack = TensorBoard(log_dir='./logs/test_async_training7')
+tbCallBack = TensorBoard(log_dir=TENSORBOARD_LOG_DIR)
 tbCallBack.set_model(model)
 tbCallBack.on_train_begin()
 
 # Train / test split
 nb_entries = memory.nb_entries
 indexes = list(range(memory.window_length, nb_entries - 1))
-nb_entries_train = int(nb_entries * 2 / 3)
+nb_entries_train = int(nb_entries * 95 / 100)   # first 95% train / last 5% val (TODO: change this policy to get some of the last collected data in train?)
 indexes_train = indexes[:nb_entries_train].copy()
 indexes_val = indexes[nb_entries_train:].copy()
 
