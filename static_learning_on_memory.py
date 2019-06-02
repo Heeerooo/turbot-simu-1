@@ -2,6 +2,7 @@ import os
 import random
 
 import gym
+import gym_simu
 import numpy as np
 from keras.callbacks import TensorBoard
 from keras.optimizers import Adam
