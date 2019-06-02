@@ -79,12 +79,16 @@ if os.path.isfile(CHECKPOINT_WEIGHTS_FILE):
 ################################
 
 # Load previously created data
-# memory.load() # TODO: fix this. It does not work. If we load, then append fails afterwards.
+memory.load() # TODO: fix this. It does not work. If we load, then append fails afterwards.
+
+print("Memory length: ", memory.actions.length )
 
 # Generate more data by running the simulation
 dqn.test(env, nb_episodes=NUM_EPISODES_PER_LOOP, visualize=False, verbose=1, nb_max_episode_steps=200)
 
 print("Memory length: ", memory.actions.length )
+
+memory.save()
 
 ################################
 # Train on the generated dataset

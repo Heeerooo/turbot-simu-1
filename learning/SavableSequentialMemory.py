@@ -13,16 +13,21 @@ class SavableSequentialMemory(SequentialMemory):
     def load(self):
         if os.path.isfile(self.filename):
             with open(self.filename, 'rb') as handle:
+                # Load data from pickle file
                 loaded = pickle.load(handle)
-                lenght = len(loaded['actions'])
-                self.actions.length = lenght
-                self.rewards.length = lenght
-                self.terminals.length = lenght
-                self.observations.length = lenght
-                self.actions.data = loaded['actions']
-                self.rewards.data = loaded['rewards']
-                self.terminals.data = loaded['terminals']
-                self.observations.data = loaded['observations']
+                # lenght = len(loaded['actions'])
+                # self.actions.length = lenght
+                # self.rewards.length = lenght
+                # self.terminals.length = lenght
+                # self.observations.length = lenght
+                loaded_actions = loaded['actions']
+                loaded_rewards = loaded['rewards']
+                loaded_terminals = loaded['terminals']
+                loaded_observations = loaded['observations']
+                # Put data in memory object
+                for action, reward, terminal, observation in zip(loaded_actions, loaded_rewards, loaded_terminals, loaded_observations):
+                    self.append(observation, action, reward, terminal)
+
                 print("Memory loaded")
 
     def save(self):
@@ -48,12 +53,5 @@ class SavableSequentialMemory(SequentialMemory):
             reward (float): Reward obtained by taking this action
             terminal (boolean): Is the state terminal
         """ 
-        super(SavableSequentialMemory, self).append(observation, action, reward, terminal, training=training)
-        
-        # This needs to be understood as follows: in `observation`, take `action`, obtain `reward`
-        # and weather the next state is `terminal` or not.
-        self.observations.append(observation)
-        self.actions.append(action)
-        self.rewards.append(reward)
-        self.terminals.append(terminal)        
-
+        # training is set to True to save even in test mode
+        super(SavableSequentialMemory, self).append(observation, action, reward, terminal, training=True)
