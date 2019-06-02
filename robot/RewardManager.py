@@ -17,18 +17,16 @@ class RewardManager:
     BONUS_PHASE = 2.0   # Bonus reward when end of phase achieved
 
     def __init__(self):
-        self.previous_pos = self.BEGIN_POS_PHASE_1
+        self.previous_pos = None
         self.phase = 1
 
     def reset(self, target):
+        self.previous_pos = None
         if target=="virage":
-            self.previous_pos = self.BEGIN_POS_PHASE_2
             self.phase = 2
         elif target=="start":
-            self.previous_pos = self.BEGIN_POS_PHASE_1
             self.phase = 1
         elif target=="chicane":
-            self.previous_pos = self.BEGIN_POS_PHASE_3
             self.phase = 3
         else:
             raise Exception("Unknown target: ", target, " in RewardManager.reset()")
@@ -49,6 +47,11 @@ class RewardManager:
         return self.phase == 5 and pos[1] >= self.END_Y_PHASE_5
 
     def get_reward(self, pos):
+        if self.previous_pos == None:
+            # First call of the episode, memorize position, and return zero reward
+            self.previous_pos = pos
+            return 0.0
+
         reward = 0.0
         if self.is_end_phase_1(pos):
             self.phase += 1
