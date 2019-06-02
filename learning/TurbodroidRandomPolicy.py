@@ -90,3 +90,50 @@ class TurbodroidPolicyRepeat(EpsGreedyQPolicy):
         else:
             # Repeat last action
             return self.last_action    
+
+class TurbodroidPolicyRepeatVariant(EpsGreedyQPolicy):
+    """
+    This random policy is based on EpsGreedyPolicy,
+    but each random action is memorized for the next 3 steps, to repeat it
+
+    Eps Greedy policy either:
+    - takes a random action with probability epsilon
+    - takes current best action with prob (1 - epsilon)
+
+    """
+    def __init__(self, eps=.1):
+        super(TurbodroidPolicyRepeatVariant, self).__init__(eps=eps)
+        self.NB_REPEAT_STEPS = 4
+        self.counter = self.NB_REPEAT_STEPS - 1
+        self.last_action = 0
+
+    def select_action(self, q_values):
+        """Return the selected action
+        # Arguments
+            q_values (np.ndarray): List of the estimations of Q for each action
+        # Returns
+            Selection action
+        """
+        assert q_values.ndim == 1
+        nb_actions = q_values.shape[0]
+
+        self.counter += 1
+
+        if np.random.uniform() < self.eps:
+
+            if self.counter >= self.NB_REPEAT_STEPS:
+                # Reset counter
+                self.counter = 0
+                # Select the new random action
+                action = np.random.randint(0, nb_actions)
+                # Memorize it for next steps
+                self.last_action = action
+            else:
+                # We repeat last random action
+                action = self.last_action
+
+        else:
+            # max Q action
+            action = np.argmax(q_values)
+
+        return action

@@ -6,12 +6,11 @@ import gym_simu
 import numpy as np
 from keras.callbacks import TensorBoard
 from keras.optimizers import Adam
-# from rl.policy import LinearAnnealedPolicy
 
 from learning.SavableSequentialMemory import SavableSequentialMemory
 from learning.StaticDQNAgent import StaticDQNAgent
 from learning.TurbodroidModel import TurbodroidModel
-from learning.TurbodroidRandomPolicy import TurbodroidPolicyRepeat
+from learning.TurbodroidRandomPolicy import TurbodroidPolicyRepeatVariant
 
 ENV_NAME = 'simu-v0'
 CHECKPOINT_WEIGHTS_FILE = 'dqn_simu-weights_checkpoint.h5f'
@@ -58,7 +57,7 @@ else:
 next_eps = max(eps - EPSILON_DECAY, END_EPSILON)
 print("Epsilon: ", eps, "Next epsilon: ", next_eps)
 
-policy = TurbodroidPolicyRepeat(eps=eps)
+policy = TurbodroidPolicyRepeatVariant(eps=eps)
 
 ################################
 # Create the DQN agent
