@@ -135,7 +135,6 @@ class TurbodroidPolicyRepeatVariant(EpsGreedyQPolicy):
         else:
             # max Q action
             action = np.argmax(q_values)
-            # print("Q values: ", q_values)
-            print("Choosing action: ", "NOTHING" if action==0 else "RIGHT" if action==1 else "LEFT")
+            print("Q values: ", q_values, ' Action: ', "NOTHING" if action==0 else "RIGHT" if action==1 else "LEFT")
 
         return action
