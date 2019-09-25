@@ -87,7 +87,8 @@ class Sequencer(Component):
     def init_circle(self):
         p_coef = self.current_program['p_coef'] if 'p_coef' in self.current_program else None
         circle_radius = self.current_program['circle_radius'] if 'circle_radius' in self.current_program else None
-        self.strategy = self.strategy_factory.create_circle(p_coef, circle_radius)
+        obstacle_offset = self.current_program['obstacle_offset'] if 'obstacle_offset' in self.current_program else None
+        self.strategy = self.strategy_factory.create_circle(p_coef, circle_radius,obstacle_offset)
 
     def init_cap_standard(self):
         self.strategy = self.strategy_factory.create_cap_standard(self.cap_target, self.current_program['speed'])

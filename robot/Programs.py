@@ -597,9 +597,10 @@ CIRCLE = [
 CIRCLE_DLVV = [
     {
         'instruction': 'circle',  # suiviImageLigneDroite ou suiviImageRoues
-        'speed': 40,
+        'speed': 45,
         'p_coef': 50,
-        'clip': 150,
+        'clip': 200,
+        'obstacle_offset': 0.2,
         'circle_radius': 150,
         'lock_zone_radius': 160,
         'conditionFin': 'tacho',

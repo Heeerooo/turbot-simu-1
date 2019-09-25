@@ -5,8 +5,8 @@ from robot.strategy.Strategy import Strategy
 
 class CircleStrategy(Strategy):
 
-    def __init__(self, image_analyzer, p_coef, circle_radius, obstacle_avoidance_error=0.2):
-        self.obstacle_avoidance_error = obstacle_avoidance_error
+    def __init__(self, image_analyzer, p_coef, circle_radius=150, obstacle_offset=0.2):
+        self.obstacle_offset = obstacle_offset
         self.circle_radius = circle_radius
         self.p_coef = p_coef
         self.image_analyzer = image_analyzer
@@ -36,7 +36,7 @@ class CircleStrategy(Strategy):
 
             if self.side_avoidance is not None\
                     and should_compute_obstacle_offset(self.image_analyzer.distance_obstacle_line):
-                error_angle += self.obstacle_avoidance_error * self.side_avoidance
+                error_angle += self.obstacle_offset * self.side_avoidance
 
             self.previous_error_angle = error_angle
             return self.p_coef * error_angle

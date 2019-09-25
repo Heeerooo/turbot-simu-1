@@ -6,7 +6,7 @@ from robot.strategy.LineAngleOffset import LineAngleOffset
 
 class StrategyFactory:
 
-    def __init__(self,car, image_analyzer):
+    def __init__(self, car, image_analyzer):
         self.car = car
         self.image_analyzer = image_analyzer
 
@@ -22,5 +22,5 @@ class StrategyFactory:
     def create_cap_standard(self, cap_target, vitesse):
         return CapStandardStrategy(self.car, cap_target, vitesse)
 
-    def create_circle(self, p_coef, circle_radius):
-        return CircleStrategy(self.image_analyzer, p_coef, circle_radius)
+    def create_circle(self, p_coef, circle_radius, obstacle_offset):
+        return CircleStrategy(self.image_analyzer, p_coef, circle_radius, obstacle_offset)
