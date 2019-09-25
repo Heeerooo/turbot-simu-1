@@ -133,6 +133,8 @@ class Sequencer(Component):
             self.car.set_chenillard(self.current_program['chenillard'])
         if 'clip' in self.current_program:
             self.image_analyzer.set_clip_length(self.current_program['clip'])
+        if 'lock_zone_radius' in self.current_program:
+            self.image_analyzer.set_lock_zone_radius(self.current_program['lock_zone_radius'])
 
     def check_cap(self):
         final_cap_mini = self.current_program['capFinalMini']

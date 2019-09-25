@@ -594,6 +594,26 @@ CIRCLE = [
     }
 ]
 
+CIRCLE_DLVV = [
+    {
+        'instruction': 'circle',  # suiviImageLigneDroite ou suiviImageRoues
+        'speed': 40,
+        'p_coef': 50,
+        'clip': 150,
+        'circle_radius': 150,
+        'lock_zone_radius': 160,
+        'conditionFin': 'tacho',
+        'tacho': 100000,
+    },
+    {
+        'instruction': 'tourne',  # ArrÃªt avec roues a 0
+        'speed': 0,
+        'positionRoues': 0,
+        'conditionFin': 'duree',
+        'duree': 10,
+    }
+]
+
 TEST_LOGS = [
     {
         'instruction': 'lineAngleOffset',  # suiviImageLigneDroite ou suiviImageRoues
