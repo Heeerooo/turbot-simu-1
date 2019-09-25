@@ -135,8 +135,10 @@ class Simulator:
 
             self.client.simxGetVisionSensorImage(vision_sensor_handle, True,
                                                  self.client.simxDefaultSubscriber(callback))
-        if self.simulation_time - delay in self.images[vision_sensor_handle]:
-            return self.images[vision_sensor_handle][self.simulation_time - delay]
+
+        image_simu_time = round(self.simulation_time - delay, 2)
+        if image_simu_time in self.images[vision_sensor_handle]:
+            return self.images[vision_sensor_handle][image_simu_time]
         else:
             return None, None
 
