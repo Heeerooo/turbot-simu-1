@@ -48,8 +48,11 @@ class ImageAnalyzer:
     pixel_offset_line = None
     distance_obstacle_line = None
     side_avoidance = None
+    offset_baseline_height = 50
 
     final_mask_for_display = None
+
+    circle_poly2_intersect_radius = None
 
     def __init__(self, car, image_warper, show_and_wait=False, log=True):
         self.log = log
@@ -57,7 +60,13 @@ class ImageAnalyzer:
         self.image_warper = image_warper
         self.show_and_wait = show_and_wait
         self.clip_length = 0
-        self.offset_baseline_height = 50
+        self.final_image_height = image_warper.warped_height
+        self.final_image_width = image_warper.warped_width
+
+    def reset(self):
+        self.poly_2_coefs = None
+        self.poly_1_coefs = None
+        self.circle_poly2_intersect_radius = None
 
     def analyze(self):
         mask_line, mask_obstacles = self.car.get_images()
@@ -69,23 +78,30 @@ class ImageAnalyzer:
             mask_line = self.clip_image(mask_line)
 
             self.poly_1_interpol(mask_line)
+            self.poly_2_interpol(mask_line)
             self.compute_robot_horizontal_offset_from_poly1()
-            print("offset", self.pixel_offset_line)
             self.compute_obstacle_position(mask_line, mask_obstacles)
 
             if self.show_and_wait or self.log:
 
-                # Display final mask for debug
-                self.poly_2_interpol(mask_line)
-                self.final_mask_for_display = np.zeros((mask_line.shape[0], mask_line.shape[1], 3))
-                self.final_mask_for_display[..., 1] = mask_obstacles
-                self.final_mask_for_display[..., 2] = mask_line
-                self.draw_line_offset_line()
-                draw_interpol_poly1(self.final_mask_for_display, self.poly_1_coefs)
-                draw_interpol_poly2(self.final_mask_for_display, self.poly_2_coefs)
-                if self.show_and_wait:
-                    cv2.imshow('merged final', self.final_mask_for_display)
-                    cv2.waitKey(0)
+                self.draw_log_image(mask_line, mask_obstacles)
+
+    def draw_log_image(self, mask_line, mask_obstacles):
+        # Display final mask for debug
+        self.final_mask_for_display = np.zeros((mask_line.shape[0], mask_line.shape[1], 3))
+        self.final_mask_for_display[..., 1] = mask_obstacles
+        self.final_mask_for_display[..., 2] = mask_line
+        if self.offset_baseline_height is not None:
+            self.draw_line_offset_line()
+        if self.poly_1_coefs is not None:
+            draw_interpol_poly1(self.final_mask_for_display, self.poly_1_coefs)
+        if self.poly_2_coefs is not None:
+            draw_interpol_poly2(self.final_mask_for_display, self.poly_2_coefs)
+        if self.circle_poly2_intersect_radius is not None:
+            draw_circle(self.final_mask_for_display, self.circle_poly2_intersect_radius)
+        if self.show_and_wait:
+            cv2.imshow('merged final', self.final_mask_for_display)
+            cv2.waitKey(0)
 
     def clip_image(self, image):
         image[:self.clip_length, :] = 0
@@ -160,7 +176,7 @@ class ImageAnalyzer:
             return np.polyfit(y, x, degree)
 
     def draw_line_offset_line(self):
-        lineY = (self.image_warper.warped_height - self.offset_baseline_height)
+        lineY = (self.final_image_height - self.offset_baseline_height)
         shape = self.final_mask_for_display.shape
         lineX = np.arange(0, shape[1] - 1)
         self.final_mask_for_display[lineY, lineX, :] = 1
@@ -170,8 +186,8 @@ class ImageAnalyzer:
             self.pixel_offset_line = None
         else:
             self.pixel_offset_line = (self.poly_1_coefs[0] * (
-                    self.image_warper.warped_height - self.offset_baseline_height)
-                                      + self.poly_1_coefs[1]) - (self.image_warper.warped_width / 2)
+                    self.final_image_height - self.offset_baseline_height)
+                                      + self.poly_1_coefs[1]) - (self.final_image_width / 2)
 
     def compute_obstacle_position(self, mask_line, mask_obstacles):
 
@@ -224,12 +240,12 @@ class ImageAnalyzer:
         self.distance_obstacle_line = min(distance_left_obstacle, distance_right_obstacle, key=abs)
 
     def set_clip_length(self, clip_length):
-        if clip_length < 0 or clip_length > self.image_warper.warped_height:
+        if clip_length < 0 or clip_length > self.final_image_height:
             raise Exception("Clip lenght out of final image bounds")
         self.clip_length = clip_length
 
     def set_offset_baseline_height(self, offset_line_height):
-        if offset_line_height < 0 or offset_line_height > self.image_warper.warped_height:
+        if offset_line_height < 0 or offset_line_height > self.final_image_height:
             raise Exception("Clip lenght out of final image bounds")
         self.offset_baseline_height = offset_line_height
 
@@ -254,4 +270,16 @@ def draw_interpol(image, interpol_function):
     ypoly = np.clip(ypoly, 0, shape[1] - 2)
     image[xall, ypoly, :] = 0
     image[xall, ypoly, 1] = 255
+    return image
+
+def draw_circle(image, r):
+    shape = image.shape
+    xmax = shape[0]
+    ymax = shape[1]
+    # Plot circle
+    for y in range(ymax):
+        t = r ** 2 - (y - ymax / 2) ** 2
+        if t > 0:
+            x = xmax - int(np.sqrt(t))
+            image[x, y, 1] = 255
     return image

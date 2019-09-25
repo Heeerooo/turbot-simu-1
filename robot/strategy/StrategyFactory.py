@@ -1,4 +1,5 @@
 from robot.strategy.CapStandardStrategy import CapStandardStrategy
+from robot.strategy.CircleStrategy import CircleStrategy
 from robot.strategy.ImageStraitLineStrategy import ImageStraitLineStrategy
 from robot.strategy.LineAngleOffset import LineAngleOffset
 
@@ -20,3 +21,6 @@ class StrategyFactory:
 
     def create_cap_standard(self, cap_target, vitesse):
         return CapStandardStrategy(self.car, cap_target, vitesse)
+
+    def create_circle(self, p_coef, circle_radius):
+        return CircleStrategy(self.image_analyzer, p_coef, circle_radius)

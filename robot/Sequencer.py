@@ -84,6 +84,11 @@ class Sequencer(Component):
         offset_coef = self.current_program['offset_coef'] if 'offset_coef' in self.current_program else None
         self.strategy = self.strategy_factory.create_lao(additional_offset, angle_coef, offset_coef)
 
+    def init_circle(self):
+        p_coef = self.current_program['p_coef'] if 'p_coef' in self.current_program else None
+        circle_radius = self.current_program['circle_radius'] if 'circle_radius' in self.current_program else None
+        self.strategy = self.strategy_factory.create_circle(p_coef, circle_radius)
+
     def init_cap_standard(self):
         self.strategy = self.strategy_factory.create_cap_standard(self.cap_target, self.current_program['speed'])
 
@@ -96,6 +101,7 @@ class Sequencer(Component):
         print(print(json.dumps(self.current_program, indent=4)))
         self.time_start = self.car.get_time()
         self.strategy = None
+        self.image_analyzer.reset()
 
         # Applique l'instruction
         instructions_actions = {
@@ -104,6 +110,7 @@ class Sequencer(Component):
             'ajouteCap': self.add_cap,
             'tourne': self.turn,
             'lineAngleOffset': self.init_lao,
+            'circle': self.init_circle,
             'ligneDroite': self.init_cap_standard,
         }
         if instruction not in instructions_actions.keys():

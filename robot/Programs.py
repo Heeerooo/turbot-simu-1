@@ -26,15 +26,13 @@ TRR_2019 = [{
     },
     # Premier virage
     {
-        'instruction': 'lineAngleOffset',  # suiviImageLigneDroite ou suiviImageRoues
-        'speed': 50,
+        'instruction': 'circle',  # suiviImageLigneDroite ou suiviImageRoues
+        'speed': 60,
+        'p_coef': 60,
+        'circle_radius': 180,
         'conditionFin': 'cap',
         'capFinalMini': 160,
-        'clip': 200,
-        'angle_coef': 60,
-        'offset_coef': 0.4,
-        'offset_baseline_height': 50,
-        'capFinalMaxi': 270,  # En relatif par rapport au cap initial
+        'capFinalMaxi': 270,
     },
     {
         'instruction': 'setTacho',  # Memorise le tacho actuel
@@ -567,6 +565,25 @@ TEST = [
         'offset_coef': 0.15,
         'conditionFin': 'tacho',
         'tacho': 10000,
+    },
+    {
+        'instruction': 'tourne',  # ArrÃªt avec roues a 0
+        'speed': 0,
+        'positionRoues': 0,
+        'conditionFin': 'duree',
+        'duree': 10,
+    }
+]
+
+CIRCLE = [
+    {
+        'instruction': 'circle',  # suiviImageLigneDroite ou suiviImageRoues
+        'speed': 55,
+        'p_coef': 60,
+        'clip': 150,
+        'circle_radius': 180,
+        'conditionFin': 'tacho',
+        'tacho': 100000,
     },
     {
         'instruction': 'tourne',  # ArrÃªt avec roues a 0
