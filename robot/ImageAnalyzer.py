@@ -233,11 +233,14 @@ class ImageAnalyzer:
         self.lock_zone_radius = lock_zone_radius
 
     def compute_obstacle_lock_zone(self, mask_obstacles):
+        if self.lock_zone_radius is None:
+            self.obstacle_in_lock_zone = False
+            return
+
         shape = mask_obstacles.shape
         lock_zone_image = np.zeros(mask_obstacles.shape)
         cv2.circle(lock_zone_image, (round(shape[1] / 2), shape[0]), self.lock_zone_radius, 255, -1)
         self.obstacle_in_lock_zone = True in np.logical_and(mask_obstacles, lock_zone_image)
-        print()
 
 
 def draw_interpol_poly1(image, poly_coefs):
@@ -260,7 +263,7 @@ def draw_interpol(image, interpol_function):
     ypoly = interpol_function(xall).astype(int)
     ypoly = np.clip(ypoly, 0, shape[1] - 2)
     image[xall, ypoly, :] = 0
-    image[xall, ypoly+1, :] = 1
+    image[xall, ypoly + 1, :] = 1
     return image
 
 
@@ -275,10 +278,10 @@ def draw_circle(image, r, color):
             x = xmax - int(np.sqrt(t))
             if color is "green":
                 image[x, y, 1] = 1
-                image[x-1, y, 1] = 1
+                image[x - 1, y, 1] = 1
             else:
                 image[x, y, :] = 1
-                image[x-1, y, :] = 1
+                image[x - 1, y, :] = 1
     return image
 
 
