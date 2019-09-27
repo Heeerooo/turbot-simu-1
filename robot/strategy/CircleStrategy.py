@@ -64,6 +64,4 @@ WIDTH_HALF_CORRIDOR = 50
 
 
 def should_compute_obstacle_offset(distance_obstacle_line):
-    print(distance_obstacle_line, abs(distance_obstacle_line) < WIDTH_HALF_CORRIDOR)
-
     return distance_obstacle_line is None or abs(distance_obstacle_line) < WIDTH_HALF_CORRIDOR
