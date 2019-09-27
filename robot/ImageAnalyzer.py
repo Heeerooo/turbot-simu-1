@@ -21,7 +21,9 @@ class ImageAnalyzer:
     side_avoidance = None
     offset_baseline_height = 50
     lock_zone_radius = None
+    avoidance_zone_radius = None
     obstacle_in_lock_zone = False
+    obstacle_in_avoidance_zone = False
     final_mask_for_display = None
     circle_poly2_intersect_radius = None
 
@@ -39,7 +41,9 @@ class ImageAnalyzer:
         self.poly_1_coefs = None
         self.circle_poly2_intersect_radius = None
         self.obstacle_in_lock_zone = False
+        self.obstacle_in_avoidance_zone = False
         self.lock_zone_radius = None
+        self.avoidance_zone_radius = None
 
     def analyze(self):
         mask_line, mask_obstacles = self.car.get_images()
@@ -49,16 +53,19 @@ class ImageAnalyzer:
             mask_line = self.image_warper.warp(mask_line, "line")
             mask_obstacles = self.image_warper.warp(mask_obstacles, "obstacle")
             mask_line = self.clip_image(mask_line)
-            mask_obstacles = self.clip_image(mask_obstacles)
 
             self.poly_1_interpol(mask_line)
             self.poly_2_interpol(mask_line)
             self.compute_robot_horizontal_offset_from_poly1()
             self.compute_obstacle_line_position(mask_line, mask_obstacles)
             self.compute_obstacle_lock_zone(mask_obstacles)
+            self.compute_obstacle_avoidance_zone(mask_obstacles)
 
             if self.show_and_wait or self.log:
                 self.draw_log_image(mask_line, mask_obstacles)
+                if self.show_and_wait:
+                    cv2.imshow('merged final', self.final_mask_for_display)
+                    cv2.waitKey(0)
 
     def draw_log_image(self, mask_line, mask_obstacles):
         # Display final mask for debug
@@ -75,9 +82,8 @@ class ImageAnalyzer:
             draw_circle(self.final_mask_for_display, self.circle_poly2_intersect_radius, "white")
         if self.lock_zone_radius is not None:
             draw_circle(self.final_mask_for_display, self.lock_zone_radius, "green")
-        if self.show_and_wait:
-            cv2.imshow('merged final', self.final_mask_for_display)
-            cv2.waitKey(0)
+        if self.avoidance_zone_radius is not None:
+            draw_circle(self.final_mask_for_display, self.avoidance_zone_radius, "red")
 
     def clip_image(self, image):
         image[:self.clip_length, :] = 0
@@ -232,15 +238,27 @@ class ImageAnalyzer:
             raise Exception("lock zone lenght out of final image bounds")
         self.lock_zone_radius = lock_zone_radius
 
-    def compute_obstacle_lock_zone(self, mask_obstacles):
-        if self.lock_zone_radius is None:
-            self.obstacle_in_lock_zone = False
-            return
+    def set_avoidance_zone_radius(self, avoidance_zone_radius):
+        if avoidance_zone_radius < 0 or avoidance_zone_radius > self.final_image_height:
+            raise Exception("avoidance zone lenght out of final image bounds")
+        self.avoidance_zone_radius = avoidance_zone_radius
 
-        shape = mask_obstacles.shape
-        lock_zone_image = np.zeros(mask_obstacles.shape)
-        cv2.circle(lock_zone_image, (round(shape[1] / 2), shape[0]), self.lock_zone_radius, 255, -1)
-        self.obstacle_in_lock_zone = True in np.logical_and(mask_obstacles, lock_zone_image)
+    def compute_obstacle_avoidance_zone(self, mask_obstacles):
+        self.obstacle_in_avoidance_zone = compute_bottom_center_circle_zone_presence(mask_obstacles,
+                                                                                     self.avoidance_zone_radius)
+
+    def compute_obstacle_lock_zone(self, mask_obstacles):
+        self.obstacle_in_lock_zone = compute_bottom_center_circle_zone_presence(mask_obstacles,
+                                                                                self.lock_zone_radius)
+
+def compute_bottom_center_circle_zone_presence(image, radius):
+    if radius is None or image is None:
+        return False
+
+    shape = image.shape
+    circle_zone_image = np.zeros(image.shape)
+    cv2.circle(circle_zone_image, (round(shape[1] / 2), shape[0]), radius, 255, -1)
+    return True in np.logical_and(image, circle_zone_image)
 
 
 def draw_interpol_poly1(image, poly_coefs):
@@ -279,6 +297,9 @@ def draw_circle(image, r, color):
             if color is "green":
                 image[x, y, 1] = 1
                 image[x - 1, y, 1] = 1
+            elif color is "red":
+                image[x, y, 2] = 1
+                image[x - 1, y, 2] = 1
             else:
                 image[x, y, :] = 1
                 image[x - 1, y, :] = 1

@@ -29,7 +29,6 @@ class SpeedController(Component):
         self.speed_target = (speed_percent / 100) * self.max_speed
         if self.speed_target < self.min_speed:
             self.speed_target = 0
-        print("target speed is now %d" % self.speed_target)
 
     def execute(self):
         self.update_speed()

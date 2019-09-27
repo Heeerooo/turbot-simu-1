@@ -38,20 +38,22 @@ class CircleStrategy(Strategy):
         if error_angle is None:
             return self.p_coef * self.previous_error_angle
         else:
-
-            if not self.image_analyzer.obstacle_in_lock_zone:
-                self.side_avoidance = self.image_analyzer.side_avoidance
-
-            if self.side_avoidance is not None \
-                    and should_compute_obstacle_offset(self.image_analyzer.distance_obstacle_line):
-                error_angle += self.obstacle_offset * self.side_avoidance
-
+            if self.image_analyzer.obstacle_in_avoidance_zone:
+                error_angle += self.compute_obstacle_error()
             self.previous_error_angle = error_angle
             return self.p_coef * error_angle
 
-    def compute_speed(self):
+    def compute_obstacle_error(self):
+        if not self.image_analyzer.obstacle_in_lock_zone:
+            self.side_avoidance = self.image_analyzer.side_avoidance
         if self.side_avoidance is not None \
                 and should_compute_obstacle_offset(self.image_analyzer.distance_obstacle_line):
+            return self.obstacle_offset * self.side_avoidance
+        else:
+            return 0
+
+    def compute_speed(self):
+        if self.image_analyzer.obstacle_in_avoidance_zone:
             return self.avoidance_speed
         else:
             return self.nominal_speed

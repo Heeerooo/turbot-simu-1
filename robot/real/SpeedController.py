@@ -34,7 +34,6 @@ class SpeedController(Component):
         self.speed_target = (speed_percent / 100) * self.max_speed
         if self.speed_target < self.min_speed:
             self.speed_target = 0
-        print("target speed is now %d" % self.speed_target)
 
     # Make a reverse at a fixed speed
     def set_reverse(self):
@@ -46,14 +45,12 @@ class SpeedController(Component):
             raise Exception("acceleration percent must be beetwent 0 and 100, was %f" % acceleration_percent)
         self.acceleration_step = (acceleration_percent / float(100)) * (
                 self.max_acceleration_step - self.min_acceleration_step) + self.min_acceleration_step
-        print("acceleration is now %d" % self.acceleration_step)
 
     def set_deceleration_percent(self, deceleration_percent):
         if not 0 <= deceleration_percent <= 100:
             raise Exception("deceleration percent must be beetwent 0 and 100, was %f" % deceleration_percent)
         self.deceleration_step = (deceleration_percent / float(100)) * (
                 self.max_deceleration_step - self.min_deceleration_step) + self.min_deceleration_step
-        print("deceleration is now %d" % self.deceleration_step)
 
     # Method execute must be called on a regular basis
     def execute(self):
