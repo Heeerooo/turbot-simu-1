@@ -91,11 +91,8 @@ class ImageAnalyzer:
 
     def clean_mask_line(self, image):
 
-        # Scale to openCV format: transform [0.,1.] to [0,255]
-        int_mat = (image * 255).astype(np.uint8)
-
         # Get contours
-        _, thresh = cv2.threshold(int_mat, self.MIN_THRESHOLD_CONTOUR, self.MAX_VALUE_CONTOUR, 0)
+        _, thresh = cv2.threshold(image, self.MIN_THRESHOLD_CONTOUR, self.MAX_VALUE_CONTOUR, 0)
         result = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
         # Open cv version compatibility issue
@@ -122,7 +119,7 @@ class ImageAnalyzer:
                     bad_indexes.append(i)
                 else:
                     # Compute sum of pixels on area
-                    mask = np.ones(int_mat.shape[:2], dtype="uint8") * 255
+                    mask = np.ones(image.shape[:2], dtype="uint8") * 255
                     cv2.drawContours(mask, [cnt], -1, 0, -1)
                     # extractMat = np.multiply(image, mask > 0)
                     # sumContour = np.multiply(extractMat, mask > 0).sum()
@@ -131,14 +128,11 @@ class ImageAnalyzer:
             bad_contours = [contours[i] for i in bad_indexes]
 
             # Create mask with contours to remove
-            mask = np.ones(int_mat.shape[:2], dtype="uint8") * 255
+            mask = np.ones(image.shape[:2], dtype="uint8") * 255
             cv2.drawContours(mask, bad_contours, -1, 0, -1)
 
             # Apply mask on matrix
-            result = np.multiply(int_mat, mask > 0)
-
-            # Rescale to [0,1]
-            result = result / 255.
+            result = np.multiply(image, mask > 0)
 
             return result
 
