@@ -601,6 +601,7 @@ CIRCLE_DLVV = [
         'p_coef': 50,
         'clip': 200,
         'obstacle_offset': 0.2,
+        'avoidance_speed': 20,
         'circle_radius': 150,
         'lock_zone_radius': 160,
         'conditionFin': 'tacho',

@@ -5,4 +5,8 @@ class Strategy(ABC):
 
     @abstractmethod
     def compute_steering(self):
-        pass
+        return None
+
+    @abstractmethod
+    def compute_speed(self):
+        return None

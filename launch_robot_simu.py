@@ -84,7 +84,7 @@ image_analyzer = ImageAnalyzer(car=car,
 strategy_factory = StrategyFactory(car, image_analyzer)
 
 sequencer = Sequencer(car=car,
-                      program=Programs.CIRCLE,
+                      program=Programs.CIRCLE_DLVV,
                       strategy_factory=strategy_factory,
                       image_analyzer=image_analyzer)
 

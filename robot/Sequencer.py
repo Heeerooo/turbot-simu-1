@@ -26,6 +26,7 @@ class Sequencer(Component):
     flag_appui_court = False  # Passe a True quand un appui court (3 secondes) a ete detecte
 
     strategy = None
+    speed = None
 
     def __init__(self, car, program, strategy_factory, image_analyzer):
         self.strategy_factory = strategy_factory
@@ -44,6 +45,9 @@ class Sequencer(Component):
             steering = self.strategy.compute_steering()
             if steering is not None:
                 self.car.turn(steering)
+            speed = self.strategy.compute_speed()
+            if speed is not None:
+                self.car.forward(speed)
 
         if self.check_end_sequence():
             self.handle_end_sequence()
@@ -88,7 +92,13 @@ class Sequencer(Component):
         p_coef = self.current_program['p_coef'] if 'p_coef' in self.current_program else None
         circle_radius = self.current_program['circle_radius'] if 'circle_radius' in self.current_program else None
         obstacle_offset = self.current_program['obstacle_offset'] if 'obstacle_offset' in self.current_program else None
-        self.strategy = self.strategy_factory.create_circle(p_coef, circle_radius,obstacle_offset)
+        avoidance_speed = self.current_program[
+            'avoidance_speed'] if 'avoidance_speed' in self.current_program else self.speed
+        self.strategy = self.strategy_factory.create_circle(p_coef,
+                                                            self.speed,
+                                                            avoidance_speed,
+                                                            circle_radius,
+                                                            obstacle_offset)
 
     def init_cap_standard(self):
         self.strategy = self.strategy_factory.create_cap_standard(self.cap_target, self.current_program['speed'])
@@ -114,6 +124,9 @@ class Sequencer(Component):
             'circle': self.init_circle,
             'ligneDroite': self.init_cap_standard,
         }
+
+        self.set_speed()
+
         if instruction not in instructions_actions.keys():
             raise Exception("Instruction " + instruction + " does not exist")
         instructions_actions[instruction]()
@@ -122,10 +135,13 @@ class Sequencer(Component):
 
         self.start_sequence = False
 
-    def set_additional_params(self):
+    def set_speed(self):
         if 'speed' in self.current_program:
-            vitesse = self.current_program['speed']
-            self.car.forward(vitesse)
+            speed = self.current_program['speed']
+            self.car.forward(speed)
+            self.speed = speed
+
+    def set_additional_params(self):
         if 'offset_baseline_height' in self.current_program:
             self.image_analyzer.set_offset_baseline_height(self.current_program['offset_baseline_height'])
         if 'display' in self.current_program:
