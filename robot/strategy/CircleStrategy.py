@@ -5,7 +5,7 @@ from robot.strategy.Strategy import Strategy
 
 class CircleStrategy(Strategy):
 
-    def __init__(self, image_analyzer, p_coef, circle_radius=150, obstacle_offset=0.2):
+    def __init__(self, image_analyzer, p_coef, circle_radius, obstacle_offset):
         self.obstacle_offset = obstacle_offset
         self.circle_radius = circle_radius
         self.p_coef = p_coef
