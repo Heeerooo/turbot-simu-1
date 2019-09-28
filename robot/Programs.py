@@ -579,7 +579,8 @@ CAP_OFFSET = [
     {
         'instruction': 'capOffset',  # suiviImageLigneDroite ou suiviImageRoues
         'speed': 60,
-        'p_correction_coef': 0.,
+        'p_correction_coef': 0.1,
+        'i_correction_coef': 0.01,
         'clip': 150,
         'offset_baseline_height': 50,
         'obstacles': False,

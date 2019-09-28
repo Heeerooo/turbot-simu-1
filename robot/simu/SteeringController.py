@@ -13,9 +13,7 @@ class SteeringController(Component):
     steering = 0
 
     def set_steering(self, steering):
-        if not -100 < steering < 100:
-            raise Exception("steering must be between -100 and 100, was ", steering)
-        self.steering = steering
+        self.steering = np.clip(steering,-100,100)
 
     def execute(self):
         if -10 < self.steering < 10:

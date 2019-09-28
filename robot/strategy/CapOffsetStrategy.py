@@ -1,3 +1,5 @@
+import numpy as np
+
 from robot.strategy.Strategy import Strategy
 
 
@@ -17,8 +19,10 @@ class CapOffsetStrategy(Strategy):
 
     # PID suivi de bordure
     MAX_CORRECTION_CAP_IMAGE_LIGNE_DROITE = 10.0
+    MAX_CUMUL_ERROR_OFFSET = 1000
 
-    def __init__(self, car, image_analyzer, cap_target, speed, p_correction_coef):
+    def __init__(self, car, image_analyzer, cap_target, speed, p_correction_coef, i_correction_coef):
+        self.i_correction_coef = i_correction_coef
         self.p_correction_coef = p_correction_coef
         self.image_analyzer = image_analyzer
         self.speed = speed
@@ -26,19 +30,27 @@ class CapOffsetStrategy(Strategy):
         self.cap_target = cap_target
         self.cumul_error_cap = 0.0
         self.last_error_cap = 0.0
+        self.cumul_error_offset = 0
 
     def compute_steering(self):
         self.image_analyzer.analyze()
         error_offset = self.image_analyzer.pixel_offset_line
 
         if error_offset is not None:
-            correction_cap = max(min(error_offset * self.p_correction_coef,
-                                     self.MAX_CORRECTION_CAP_IMAGE_LIGNE_DROITE),
-                                 -self.MAX_CORRECTION_CAP_IMAGE_LIGNE_DROITE)
+            self.cumul_error_offset = self.cumul_error_offset * 0.9
+            self.cumul_error_offset += error_offset
+            self.cumul_error_offset = np.clip(self.cumul_error_offset,
+                                              -self.MAX_CUMUL_ERROR_OFFSET,
+                                              self.MAX_CUMUL_ERROR_OFFSET)
+
+            correction_cap = error_offset * self.p_correction_coef + self.cumul_error_offset * self.i_correction_coef
+            correction_cap = np.clip(correction_cap,
+                                     -self.MAX_CORRECTION_CAP_IMAGE_LIGNE_DROITE,
+                                     self.MAX_CORRECTION_CAP_IMAGE_LIGNE_DROITE)
             self.cap_target += correction_cap
 
         error_cap = (((self.car.get_cap() - self.cap_target) + 180) % 360) - 180
-        # Si pas suivi image, on calcule les termes integral et derivee
+        # Si pas suivi image, on calcule l es termes integral et derivee
         self.cumul_error_cap = (self.cumul_error_cap / self.COEFF_AMORTISSEMENT_INTEGRAL) + error_cap
         # Maintient le cumul des erreurs à une valeur raisonnable
         self.cumul_error_cap = max(min(self.cumul_error_cap, self.MAX_CUMUL_ERREUR_CAP), -self.MAX_CUMUL_ERREUR_CAP)

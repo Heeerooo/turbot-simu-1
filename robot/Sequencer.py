@@ -106,11 +106,11 @@ class Sequencer(Component):
     def init_cap_offset(self):
         speed = self.current_program['speed']
         p_correction_coef = self.current_program[
-            'p_correction_coef'] if 'p_correction_coef' in self.current_program else None
-        if p_correction_coef is None:
-            self.strategy = self.strategy_factory.create_cap_offset(self.cap_target, speed)
-        else:
-            self.strategy = self.strategy_factory.create_cap_offset(self.cap_target, speed, p_correction_coef)
+            'p_correction_coef'] if 'p_correction_coef' in self.current_program else 0
+        i_correction_coef = self.current_program[
+            'i_correction_coef'] if 'i_correction_coef' in self.current_program else 0
+        self.strategy = self.strategy_factory.create_cap_offset(self.cap_target, speed, p_correction_coef,
+                                                                i_correction_coef)
 
     def handle_start_sequence(self):
 
