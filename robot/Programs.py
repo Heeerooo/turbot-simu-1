@@ -407,34 +407,6 @@ DLVV = [
 
 ]
 
-LINE_ANGLE_OFFSET = [
-    {
-        'instruction': 'setCap',  # Cap asuivre = cap actuel
-        'conditionFin': 'immediat'
-    },
-    {
-        'instruction': 'setTacho',  # Memorise le tacho actuel
-        'conditionFin': 'immediat'
-    },
-    {
-        'instruction': 'lineAngleOffset',  # suiviImageLigneDroite ou suiviImageRoues
-        'speed': 45,
-        'clip': 100,
-        'angle_coef': 60,
-        'offset_coef': 0.4,
-        'offset_baseline_height': 50,
-        'conditionFin': 'tacho',
-        'tacho': 25000,
-    },
-    {
-        'instruction': 'tourne',  # Arrêt avec roues a 0
-        'speed': 0,
-        'positionRoues': 0,
-        'conditionFin': 'duree',
-        'duree': 10,
-    }
-]
-
 CALIBRATE = [
     {
         'instruction': 'setCap',  # Cap asuivre = cap actuel
@@ -565,6 +537,54 @@ TEST = [
         'offset_coef': 0.15,
         'conditionFin': 'tacho',
         'tacho': 10000,
+    },
+    {
+        'instruction': 'tourne',  # ArrÃªt avec roues a 0
+        'speed': 0,
+        'positionRoues': 0,
+        'conditionFin': 'duree',
+        'duree': 10,
+    }
+]
+
+LINE_ANGLE_OFFSET = [
+    {
+        'instruction': 'setCap',  # Cap asuivre = cap actuel
+        'conditionFin': 'immediat'
+    },
+    {
+        'instruction': 'setTacho',  # Memorise le tacho actuel
+        'conditionFin': 'immediat'
+    },
+    {
+        'instruction': 'lineAngleOffset',  # suiviImageLigneDroite ou suiviImageRoues
+        'speed': 45,
+        'clip': 100,
+        'angle_coef': 60,
+        'offset_coef': 0.4,
+        'offset_baseline_height': 50,
+        'conditionFin': 'tacho',
+        'tacho': 25000,
+    },
+    {
+        'instruction': 'tourne',  # Arrêt avec roues a 0
+        'speed': 0,
+        'positionRoues': 0,
+        'conditionFin': 'duree',
+        'duree': 10,
+    }
+]
+
+CAP_OFFSET = [
+    {
+        'instruction': 'capOffset',  # suiviImageLigneDroite ou suiviImageRoues
+        'speed': 60,
+        'p_correction_coef': 0.,
+        'clip': 150,
+        'offset_baseline_height': 50,
+        'obstacles': False,
+        'conditionFin': 'tacho',
+        'tacho': 100000,
     },
     {
         'instruction': 'tourne',  # ArrÃªt avec roues a 0

@@ -103,6 +103,15 @@ class Sequencer(Component):
     def init_cap_standard(self):
         self.strategy = self.strategy_factory.create_cap_standard(self.cap_target, self.current_program['speed'])
 
+    def init_cap_offset(self):
+        speed = self.current_program['speed']
+        p_correction_coef = self.current_program[
+            'p_correction_coef'] if 'p_correction_coef' in self.current_program else None
+        if p_correction_coef is None:
+            self.strategy = self.strategy_factory.create_cap_offset(self.cap_target, speed)
+        else:
+            self.strategy = self.strategy_factory.create_cap_offset(self.cap_target, speed, p_correction_coef)
+
     def handle_start_sequence(self):
 
         # Premiere execution de l'instruction courante
@@ -123,6 +132,7 @@ class Sequencer(Component):
             'lineAngleOffset': self.init_lao,
             'circle': self.init_circle,
             'ligneDroite': self.init_cap_standard,
+            'capOffset': self.init_cap_offset,
         }
 
         self.set_speed()

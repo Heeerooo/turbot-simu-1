@@ -65,7 +65,9 @@ car = RealCar(steering_controller=steering_controller,
 image_warper = ImageWarper(car=car,
                            nb_images_delay=NB_IMAGES_DELAY,
                            tacho_coef=TACHO_COEF,
-                           rotation_enabled=True)
+                           show_and_wait=False,
+                           rotation_enabled=True,
+                           translation_enabled=True)
 
 image_analyzer = ImageAnalyzer(car=car,
                                image_warper=image_warper,
