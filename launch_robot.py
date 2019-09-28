@@ -33,13 +33,9 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 
 frame_cycle_log = 5
 
-log_enable = True
+log_enable = False
 
 show_loop_time = True
-
-
-if not Path(MASK_OBSTACLE_FILE).is_file() or not Path(MASK_LINE_FILE).is_file():
-    raise Exception("Inference is not launched")
 
 real_time = Time()
 
@@ -103,12 +99,20 @@ executable_components = [arduino,
                          steering_controller,
                          logger]
 
-if Path(INFERENCE_DISABLE_FILE).is_file():
-    os.remove(INFERENCE_DISABLE_FILE)
 
 # Time needed by the serial connections to get ready
 time.sleep(1)
 try:
+
+    if Path(INFERENCE_DISABLE_FILE).is_file():
+        os.remove(INFERENCE_DISABLE_FILE)
+
+    # Time needed by the serial connections to get ready
+    time.sleep(0.5)
+
+    if not Path(MASK_OBSTACLE_FILE).is_file() or not Path(MASK_LINE_FILE).is_file():
+        raise Exception("Inference is not launched")
+
     while True:
         begin_loop_time = time.time()
         [component.execute() for component in executable_components]
@@ -116,8 +120,9 @@ try:
             print("loop time", time.time() - begin_loop_time)
         # Time needed by arduino to receive next command
         time.sleep(0.005)
-except KeyboardInterrupt:
+except KeyboardInterrupt as e:
     vesc.send_speed_command(0)
     open(current_dir + "/" + INFERENCE_DISABLE_FILE, 'a').close()
     print("\n")
     print("Exiting..")
+

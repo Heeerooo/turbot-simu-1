@@ -37,7 +37,7 @@ FRAME_CYCLE_LOG = 5
 
 frame_index = 1
 
-log_enabled = True
+log_enabled = False
 
 compress_log = True
 
@@ -55,14 +55,25 @@ usbCam = UsbCam()
 cam = Camera(MASK_LINE_FILE, MASK_OBSTACLE_FILE)
 
 frames_to_log = []
+
+running = True
+
+print("Running")
 while True:
     begin_time = time.time()
 
     # Check if inference is enabled
     if Path(INFERENCE_DISABLE_FILE).is_file():
-        print("Wait robot to start")
+        if running:
+            print("Wait robot to start")
+        running = False
         time.sleep(0.1)
         continue
+    else:
+        if not running:
+            print("Running")
+        running = True
+
 
     frame = usbCam.read()
 

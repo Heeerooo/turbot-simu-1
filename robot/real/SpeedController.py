@@ -27,6 +27,7 @@ class SpeedController(Component):
         self.last_execution_time = None
         self.tachometer = None
         self.rpm = 0
+        self.previous_speed = 0
 
     def set_speed_percent(self, speed_percent):
         if not 0 <= speed_percent <= 100:
@@ -82,7 +83,11 @@ class SpeedController(Component):
         self.send_speed_command()
 
     def send_speed_command(self):
+        if abs(self.previous_speed - self.speed) < 1:
+            return
+
         self.vesc.send_speed_command(self.speed)
+        self.previous_speed = self.speed
 
 
 if __name__ == '__main__':
