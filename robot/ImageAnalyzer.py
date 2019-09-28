@@ -19,7 +19,7 @@ class ImageAnalyzer:
     pixel_offset_line = None
     distance_obstacle_line = None
     side_avoidance = None
-    offset_baseline_height = 50
+    offset_baseline_height = None
     lock_zone_radius = None
     avoidance_zone_radius = None
     obstacle_in_lock_zone = False
@@ -44,6 +44,7 @@ class ImageAnalyzer:
         self.obstacle_in_avoidance_zone = False
         self.lock_zone_radius = None
         self.avoidance_zone_radius = None
+        self.offset_baseline_height = None
 
     def analyze(self):
         mask_line, mask_obstacles = self.car.get_images()
@@ -54,12 +55,8 @@ class ImageAnalyzer:
             mask_obstacles = self.image_warper.warp(mask_obstacles, "obstacle")
             mask_line = self.clip_image(mask_line)
 
-            self.poly_1_interpol(mask_line)
-            self.poly_2_interpol(mask_line)
-            self.compute_robot_horizontal_offset_from_poly1()
-            self.compute_obstacle_line_position(mask_line, mask_obstacles)
-            self.compute_obstacle_lock_zone(mask_obstacles)
-            self.compute_obstacle_avoidance_zone(mask_obstacles)
+            self.compute_lines(mask_line)
+            self.compute_obstacles(mask_line, mask_obstacles)
 
             if self.show_and_wait or self.log:
                 self.draw_log_image(mask_line, mask_obstacles)
@@ -67,6 +64,16 @@ class ImageAnalyzer:
                 if self.show_and_wait:
                     cv2.imshow('merged final', self.final_mask_for_display)
                     cv2.waitKey(0)
+
+    def compute_lines(self, mask_line):
+        self.poly_1_interpol(mask_line)
+        self.poly_2_interpol(mask_line)
+        self.compute_robot_horizontal_offset_from_poly1()
+
+    def compute_obstacles(self, mask_line, mask_obstacles):
+        self.compute_obstacle_line_position(mask_line, mask_obstacles)
+        self.compute_obstacle_lock_zone(mask_obstacles)
+        self.compute_obstacle_avoidance_zone(mask_obstacles)
 
     def draw_log_image(self, mask_line, mask_obstacles):
         # Display final mask for debug
@@ -159,6 +166,9 @@ class ImageAnalyzer:
         self.final_mask_for_display[lineY, lineX, :] = 1
 
     def compute_robot_horizontal_offset_from_poly1(self):
+        if self.offset_baseline_height is None:
+            return
+
         if self.poly_1_coefs is None:
             self.pixel_offset_line = None
         else:
