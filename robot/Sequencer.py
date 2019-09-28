@@ -150,6 +150,8 @@ class Sequencer(Component):
             self.car.set_chenillard(self.current_program['chenillard'])
         if 'clip' in self.current_program:
             self.image_analyzer.set_clip_length(self.current_program['clip'])
+        if 'obstacles' in self.current_program:
+            self.image_analyzer.set_process_obstacle(self.current_program['obstacles'])
         if 'lock_zone_radius' in self.current_program:
             self.image_analyzer.set_lock_zone_radius(self.current_program['lock_zone_radius'])
         if 'avoidance_zone_radius' in self.current_program:

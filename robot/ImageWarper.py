@@ -1,5 +1,3 @@
-import time
-
 import cv2
 import numpy as np
 
@@ -27,7 +25,6 @@ class ImageWarper:
     warped_width = 300
 
     def warp(self, image, type):
-        begin_loop_time = time.time()
         if self.nb_images_delay == 0:
             self.actives_rotations = []
             self.actives_translations = []
@@ -86,6 +83,5 @@ class ImageWarper:
         if self.show_and_wait:
             cv2.imshow("final", warped)
             cv2.waitKey(0)
-        print("warp time", time.time() - begin_loop_time)
 
         return warped

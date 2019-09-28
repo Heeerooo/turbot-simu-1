@@ -26,6 +26,7 @@ class ImageAnalyzer:
     obstacle_in_avoidance_zone = False
     final_mask_for_display = None
     circle_poly2_intersect_radius = None
+    process_obstacles = True
 
     def __init__(self, car, image_warper, show_and_wait=False, log=True):
         self.log = log
@@ -52,11 +53,12 @@ class ImageAnalyzer:
             mask_line = self.clean_mask_line(mask_line)
             mask_obstacles = clean_mask_obstacle(mask_obstacles)
             mask_line = self.image_warper.warp(mask_line, "line")
-            mask_obstacles = self.image_warper.warp(mask_obstacles, "obstacle")
-            mask_line = self.clip_image(mask_line)
-
             self.compute_lines(mask_line)
-            self.compute_obstacles(mask_line, mask_obstacles)
+
+            if self.process_obstacles:
+                mask_obstacles = self.image_warper.warp(mask_obstacles, "obstacle")
+                mask_line = self.clip_image(mask_line)
+                self.compute_obstacles(mask_line, mask_obstacles)
 
             if self.show_and_wait or self.log:
                 self.draw_log_image(mask_line, mask_obstacles)
@@ -242,6 +244,11 @@ class ImageAnalyzer:
         if lock_zone_radius < 0 or lock_zone_radius > self.final_image_height:
             raise Exception("lock zone lenght out of final image bounds")
         self.lock_zone_radius = lock_zone_radius
+
+    def set_process_obstacle(self, process_obstacles):
+        if not isinstance(process_obstacles, bool):
+            raise Exception("process obstacle value must be bool")
+        self.process_obstacles = process_obstacles
 
     def set_avoidance_zone_radius(self, avoidance_zone_radius):
         if avoidance_zone_radius < 0 or avoidance_zone_radius > self.final_image_height:

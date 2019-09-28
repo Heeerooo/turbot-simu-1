@@ -581,6 +581,7 @@ CIRCLE = [
         'speed': 55,
         'p_coef': 55,
         'clip': 150,
+        'obstacles': False,
         'circle_radius': 180,
         'conditionFin': 'tacho',
         'tacho': 100000,

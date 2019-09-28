@@ -85,7 +85,7 @@ image_analyzer = ImageAnalyzer(car=car,
 strategy_factory = StrategyFactory(car, image_analyzer)
 
 sequencer = Sequencer(car=car,
-                      program=Programs.CIRCLE_DLVV,
+                      program=Programs.CIRCLE,
                       strategy_factory=strategy_factory,
                       image_analyzer=image_analyzer)
 
@@ -114,5 +114,5 @@ simulator.start_simulation()
 while simu_time.time() < simulation_duration_seconds:
     start_step_time = time.time()
     [component.execute() for component in executable_components]
-    start_simulator_step_time = time.time()
+    print("execution time", time.time() - start_step_time)
     simulator.do_simulation_step()
