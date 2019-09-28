@@ -1,7 +1,6 @@
 # coding=utf-8
 import cv2
 import numpy as np
-import time
 
 
 class ImageAnalyzer:
@@ -47,7 +46,6 @@ class ImageAnalyzer:
         self.avoidance_zone_radius = None
 
     def analyze(self):
-        begin_loop_time = time.time()
         mask_line, mask_obstacles = self.car.get_images()
         if mask_line is not None and mask_obstacles is not None:
             mask_line = self.clean_mask_line(mask_line)
@@ -65,10 +63,10 @@ class ImageAnalyzer:
 
             if self.show_and_wait or self.log:
                 self.draw_log_image(mask_line, mask_obstacles)
+
                 if self.show_and_wait:
                     cv2.imshow('merged final', self.final_mask_for_display)
                     cv2.waitKey(0)
-        print("analyze time", time.time() - begin_loop_time)
 
     def draw_log_image(self, mask_line, mask_obstacles):
         # Display final mask for debug
@@ -247,6 +245,7 @@ class ImageAnalyzer:
     def compute_obstacle_lock_zone(self, mask_obstacles):
         self.obstacle_in_lock_zone = compute_bottom_center_circle_zone_presence(mask_obstacles,
                                                                                 self.lock_zone_radius)
+
 
 def compute_bottom_center_circle_zone_presence(image, radius):
     if radius is None or image is None:

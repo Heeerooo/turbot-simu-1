@@ -79,7 +79,8 @@ image_warper = ImageWarper(car=car,
 
 image_analyzer = ImageAnalyzer(car=car,
                                image_warper=image_warper,
-                               show_and_wait=True)
+                               log=log_enable,
+                               show_and_wait=False)
 
 strategy_factory = StrategyFactory(car, image_analyzer)
 

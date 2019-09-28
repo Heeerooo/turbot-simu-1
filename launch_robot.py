@@ -69,6 +69,7 @@ image_warper = ImageWarper(car=car,
 
 image_analyzer = ImageAnalyzer(car=car,
                                image_warper=image_warper,
+                               log=log_enable,
                                show_and_wait=False)
 
 strategy_factory = StrategyFactory(car, image_analyzer)
@@ -99,7 +100,6 @@ executable_components = [arduino,
                          steering_controller,
                          logger]
 
-
 # Time needed by the serial connections to get ready
 time.sleep(1)
 try:
@@ -125,4 +125,3 @@ except KeyboardInterrupt as e:
     open(current_dir + "/" + INFERENCE_DISABLE_FILE, 'a').close()
     print("\n")
     print("Exiting..")
-
