@@ -57,8 +57,8 @@ class Logger(Component):
             if (self.frame_index % self.frame_cycle_log) == 0:
                 self.log_array.append([self.time.time(),
                                        self.image_analyzer.final_mask_for_display,
-                                       self.image_analyzer.poly_coeff_1,
-                                       self.image_analyzer.pixel_offset_line,
+                                       self.image_analyzer.poly_1_coefs,
+                                       self.image_analyzer.pixel_offset_poly1,
                                        self.image_analyzer.distance_obstacle_line,
                                        self.steering_controller.steering,
                                        self.image_warper.actives_rotations,
@@ -80,7 +80,7 @@ class Logger(Component):
                     else:
                         with open(file_path + ".pickle", "wb")as file:
                             pickle.dump(self.log_array, file)
-                    print("log time", self.time.time() - begin_log_time)
+                    # print("log time", self.time.time() - begin_log_time)
                     self.increment_session += 1
                     self.log_array.clear()
 

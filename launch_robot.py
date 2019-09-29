@@ -33,9 +33,11 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 
 frame_cycle_log = 5
 
-log_enable = False
+log_enable = True
 
-show_loop_time = True
+compress_log = True
+
+show_loop_time = False
 
 real_time = Time()
 
@@ -77,7 +79,7 @@ image_analyzer = ImageAnalyzer(car=car,
 strategy_factory = StrategyFactory(car, image_analyzer)
 
 sequencer = Sequencer(car=car,
-                      program=Programs.TEST_LOGS,
+                      program=Programs.TEST,
                       strategy_factory=strategy_factory,
                       image_analyzer=image_analyzer)
 
@@ -90,7 +92,7 @@ logger = Logger(image_analyzer=image_analyzer,
                 log_dir=current_dir + "/logs/robot",
                 log_persist_enable=log_enable,
                 frame_cycle_log=frame_cycle_log,
-                compress_log=True)
+                compress_log=compress_log)
 
 # Order matter, components will be executed one by one
 executable_components = [arduino,

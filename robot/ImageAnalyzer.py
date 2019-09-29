@@ -6,7 +6,7 @@ import numpy as np
 class ImageAnalyzer:
     # Constants for cleaning inference results. IMPORTANT to recalibrate this on real conditions track.
     MIN_AREA_RATIO = 0.35  # if area / area_of_biggest_contour is less than this ratio, contour is bad
-    MIN_AREA_TO_KEEP = 100.  # if max_area if less than this, reject all image
+    MIN_AREA_TO_KEEP = 400.  # if max_area if less than this, reject all image
     MIN_THRESHOLD_CONTOUR = 10
     MAX_VALUE_CONTOUR = 255
 
@@ -23,6 +23,8 @@ class ImageAnalyzer:
     lock_zone_radius = None
     avoidance_zone_radius = None
     obstacle_in_lock_zone = False
+    obstacle_in_slow_zone = False
+    slow_zone_radius = None
     obstacle_in_avoidance_zone = False
     final_mask_for_display = None
     circle_poly2_intersect_radius = None
@@ -80,6 +82,7 @@ class ImageAnalyzer:
         self.compute_obstacle_line_position(mask_line, mask_obstacles)
         self.compute_obstacle_lock_zone(mask_obstacles)
         self.compute_obstacle_avoidance_zone(mask_obstacles)
+        self.compute_obstacle_slow_zone(mask_obstacles)
 
     def draw_log_image(self, mask_line, mask_obstacles):
         # Display final mask for debug
@@ -99,6 +102,8 @@ class ImageAnalyzer:
             draw_circle(self.final_mask_for_display, self.lock_zone_radius, "green")
         if self.avoidance_zone_radius is not None:
             draw_circle(self.final_mask_for_display, self.avoidance_zone_radius, "red")
+        if self.slow_zone_radius is not None:
+            draw_circle(self.final_mask_for_display, self.slow_zone_radius, "red")
 
     def clip_image(self, image):
         image[:self.clip_length, :] = 0
@@ -130,7 +135,7 @@ class ImageAnalyzer:
             for i, cnt in enumerate(contours):
                 # Check if area if too small, in this case, reject contour
                 area = areas[i]
-                if (area / max_area) < self.MIN_AREA_RATIO:
+                if (area / max_area) < self.MIN_AREA_RATIO or area < self.MIN_AREA_TO_KEEP:
                     bad_indexes.append(i)
                 else:
                     # Compute sum of pixels on area
@@ -148,7 +153,6 @@ class ImageAnalyzer:
 
             # Apply mask on matrix
             result = np.multiply(image, mask > 0)
-
             return result
 
     def poly_1_interpol(self, image):
@@ -265,6 +269,11 @@ class ImageAnalyzer:
             raise Exception("avoidance zone lenght out of final image bounds")
         self.avoidance_zone_radius = avoidance_zone_radius
 
+    def set_slow_zone_radius(self, slow_zone_radius):
+        if slow_zone_radius < 0 or slow_zone_radius > self.final_image_height:
+            raise Exception("avoidance zone lenght out of final image bounds")
+        self.slow_zone_radius = slow_zone_radius
+
     def compute_obstacle_avoidance_zone(self, mask_obstacles):
         self.obstacle_in_avoidance_zone = compute_bottom_center_circle_zone_presence(mask_obstacles,
                                                                                      self.avoidance_zone_radius)
@@ -273,6 +282,9 @@ class ImageAnalyzer:
         self.obstacle_in_lock_zone = compute_bottom_center_circle_zone_presence(mask_obstacles,
                                                                                 self.lock_zone_radius)
 
+    def compute_obstacle_slow_zone(self, mask_obstacles):
+        self.obstacle_in_slow_zone = compute_bottom_center_circle_zone_presence(mask_obstacles,
+                                                                                self.slow_zone_radius)
 
 def compute_bottom_center_circle_zone_presence(image, radius):
     if radius is None or image is None:

@@ -28,8 +28,6 @@ MASK_LINE_FILE_TMP = RAM_DISK_DIR + "/mask_line.tmp.npy"
 
 LOGS_DIR = "logs/original"
 
-if not os.path.isdir(LOGS_DIR):
-    os.makedirs(LOGS_DIR)
 
 SIZE_LOG_FRAMES_STACK = 10
 
@@ -37,7 +35,7 @@ FRAME_CYCLE_LOG = 5
 
 frame_index = 1
 
-log_enabled = False
+log_enabled = True
 
 compress_log = True
 
@@ -81,6 +79,10 @@ while True:
         if (frame_index % FRAME_CYCLE_LOG) == 0:
             frames_to_log.append([time.time(), frame])
             if len(frames_to_log) >= SIZE_LOG_FRAMES_STACK:
+
+                if not os.path.isdir(LOGS_DIR):
+                    os.makedirs(LOGS_DIR)
+
                 begin_log_time = time.time()
                 file_path = LOGS_DIR + "/" + ("%010.5f" % time.time())
                 if compress_log:

@@ -511,32 +511,21 @@ HIPPODROME = [
 
 TEST = [
     {
-        'label': 'waitGyroStable',  # Attend stabilisation du gyro
-        'instruction': 'tourne',
-        'display': 'WAITG',
-        'chenillard': False,
-        'positionRoues': 0,
-        'vitesse': 0,
-        'conditionFin': 'attendreGyroStable'
-    },
-    {
-        'label': 'attendBouton',
-        'instruction': 'tourne',  # Attend l'appui sur le bouton
-        'display': 'WAITB',
-        'chenillard': False,
-        'positionRoues': 0,
-        'vitesse': 0,
-        'conditionFin': 'attendBouton'
-    },
-    {
-        'instruction': 'lineAngleOffset',  # suiviImageLigneDroite ou suiviImageRoues
-        'speed': 18,
+        'instruction': 'circle',  # suiviImageLigneDroite ou suiviImageRoues
+        'speed': 15,
+        'obstacle_offset': 0.5,
+        'avoidance_speed': 14,
+        'slow_zone_radius': 300,
+        'avoidance_zone_radius': 250,
+        'lock_zone_radius': 160,
+        'p_coef': 70,
+        'i_coef': 2,
+        'd_coef': 150,
         'clip': 150,
-        'offset': 30,
-        'angle_coef': 60,
-        'offset_coef': 0.15,
+        'obstacles': True,
+        'circle_radius': 120,
         'conditionFin': 'tacho',
-        'tacho': 10000,
+        'tacho': 100000,
     },
     {
         'instruction': 'tourne',  # ArrÃªt avec roues a 0

@@ -43,3 +43,7 @@ class RealCar(Car):
 
     def send_display(self, string):
         self.arduino.send_display(string)
+
+
+    def has_new_image(self):
+        return self.camera.has_new_image()

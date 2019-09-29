@@ -83,9 +83,6 @@ class SpeedController(Component):
         self.send_speed_command()
 
     def send_speed_command(self):
-        if abs(self.previous_speed - self.speed) < 1:
-            return
-
         self.vesc.send_speed_command(self.speed)
         self.previous_speed = self.speed
 
