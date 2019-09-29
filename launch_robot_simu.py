@@ -80,12 +80,12 @@ image_warper = ImageWarper(car=car,
 image_analyzer = ImageAnalyzer(car=car,
                                image_warper=image_warper,
                                log=log_enable,
-                               show_and_wait=True)
+                               show_and_wait=False)
 
 strategy_factory = StrategyFactory(car, image_analyzer)
 
 sequencer = Sequencer(car=car,
-                      program=Programs.CIRCLE,
+                      program=Programs.TURN_OFFSET,
                       strategy_factory=strategy_factory,
                       image_analyzer=image_analyzer)
 

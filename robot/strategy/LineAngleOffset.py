@@ -35,7 +35,7 @@ class LineAngleOffset(Strategy):
             if should_compute_obstacle_offset(distance_obstacle_line) \
             else self.compute_obstacle_offset(distance_obstacle_line)
 
-        line_offset = self.image_analyzer.pixel_offset_line
+        line_offset = self.image_analyzer.pixel_offset_poly1
 
         if line_offset is None:
             line_offset = 0

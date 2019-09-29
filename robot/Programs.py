@@ -596,6 +596,41 @@ CAP_OFFSET = [
     }
 ]
 
+TURN_OFFSET = [
+    {
+        'instruction': 'turnOffset',  # suiviImageLigneDroite ou suiviImageRoues
+        'speed': 60,
+        'steering_target': 0,
+        'p_correction_coef': 0.2,
+        'offset_baseline_height': 50,
+        'obstacles': False,
+        'circle_radius': 200,
+        'conditionFin': 'tacho',
+        'tacho': 3500,
+    },
+    {
+        'instruction': 'turnOffset',  # ArrÃªt avec roues a 0
+        'speed': 50,
+        'steering_target': 22,
+        'p_correction_coef': 0.2,
+        'offset_baseline_height': 50,
+        'conditionFin': 'cap',
+        'capFinalMini': 160,
+        'capFinalMaxi': 270,
+    },
+    {
+        'instruction': 'circle',  # suiviImageLigneDroite ou suiviImageRoues
+        'speed': 55,
+        'p_coef': 50,
+        'i_coef': 2,
+        'clip': 150,
+        'obstacles': False,
+        'circle_radius': 170,
+        'conditionFin': 'tacho',
+        'tacho': 100000,
+    },
+]
+
 CIRCLE = [
     {
         'instruction': 'circle',  # suiviImageLigneDroite ou suiviImageRoues

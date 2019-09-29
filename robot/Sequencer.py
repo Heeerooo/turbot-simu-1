@@ -115,8 +115,13 @@ class Sequencer(Component):
         self.strategy = self.strategy_factory.create_cap_offset(self.cap_target, speed, p_correction_coef,
                                                                 i_correction_coef)
 
-    def handle_start_sequence(self):
+    def init_turn_offset(self):
+        target_steering = self.current_program['steering_target']
+        p_correction_coef = self.current_program[
+            'p_correction_coef'] if 'p_correction_coef' in self.current_program else 0
+        self.strategy = self.strategy_factory.create_turn_offset(target_steering, p_correction_coef)
 
+    def handle_start_sequence(self):
         # Premiere execution de l'instruction courante
         self.current_program = self.program[self.sequence]
         instruction = self.current_program['instruction']
@@ -136,6 +141,7 @@ class Sequencer(Component):
             'circle': self.init_circle,
             'ligneDroite': self.init_cap_standard,
             'capOffset': self.init_cap_offset,
+            'turnOffset': self.init_turn_offset,
         }
 
         self.set_speed()

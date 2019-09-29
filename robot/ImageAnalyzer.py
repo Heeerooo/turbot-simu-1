@@ -16,7 +16,7 @@ class ImageAnalyzer:
 
     poly_1_coefs = None
     poly_2_coefs = None
-    pixel_offset_line = None
+    pixel_offset_poly1 = None
     distance_obstacle_line = None
     side_avoidance = None
     offset_baseline_height = None
@@ -177,11 +177,11 @@ class ImageAnalyzer:
             return
 
         if self.poly_1_coefs is None:
-            self.pixel_offset_line = None
+            self.pixel_offset_poly1 = None
         else:
-            self.pixel_offset_line = (self.poly_1_coefs[0] * (
+            self.pixel_offset_poly1 = (self.poly_1_coefs[0] * (
                     self.final_image_height - self.offset_baseline_height)
-                                      + self.poly_1_coefs[1]) - (self.final_image_width / 2)
+                                       + self.poly_1_coefs[1]) - (self.final_image_width / 2)
 
     def compute_obstacle_line_position(self, mask_line, mask_obstacles):
 
