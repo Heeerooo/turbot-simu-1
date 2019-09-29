@@ -89,12 +89,14 @@ class Sequencer(Component):
         self.strategy = self.strategy_factory.create_lao(additional_offset, angle_coef, offset_coef)
 
     def init_circle(self):
-        p_coef = self.current_program['p_coef'] if 'p_coef' in self.current_program else None
+        p_coef = self.current_program['p_coef'] if 'p_coef' in self.current_program else 0
+        i_coef = self.current_program['i_coef'] if 'i_coef' in self.current_program else 0
         circle_radius = self.current_program['circle_radius'] if 'circle_radius' in self.current_program else None
         obstacle_offset = self.current_program['obstacle_offset'] if 'obstacle_offset' in self.current_program else None
         avoidance_speed = self.current_program[
             'avoidance_speed'] if 'avoidance_speed' in self.current_program else self.speed
         self.strategy = self.strategy_factory.create_circle(p_coef,
+                                                            i_coef,
                                                             self.speed,
                                                             avoidance_speed,
                                                             circle_radius,

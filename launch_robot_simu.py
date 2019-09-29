@@ -85,7 +85,7 @@ image_analyzer = ImageAnalyzer(car=car,
 strategy_factory = StrategyFactory(car, image_analyzer)
 
 sequencer = Sequencer(car=car,
-                      program=Programs.CAP_OFFSET,
+                      program=Programs.CIRCLE,
                       strategy_factory=strategy_factory,
                       image_analyzer=image_analyzer)
 

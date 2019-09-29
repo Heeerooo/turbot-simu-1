@@ -1,5 +1,6 @@
-from circle import angle_intersection
+import numpy as np
 
+from circle import angle_intersection
 from robot.strategy.Strategy import Strategy
 
 
@@ -8,10 +9,12 @@ class CircleStrategy(Strategy):
     def __init__(self,
                  image_analyzer,
                  p_coef,
+                 i_coef,
                  circle_radius,
                  avoidance_speed,
                  nominal_speed,
                  obstacle_offset):
+        self.i_coef = i_coef
         self.nominal_speed = nominal_speed
         self.avoidance_speed = avoidance_speed
         self.obstacle_offset = obstacle_offset
@@ -19,8 +22,10 @@ class CircleStrategy(Strategy):
         self.p_coef = p_coef
         self.image_analyzer = image_analyzer
 
+    cumul_error = 0
     previous_error_angle = 0
     side_avoidance = None
+    MAX_CUMUL_ERROR = 1
 
     def compute_steering(self):
         self.image_analyzer.circle_poly2_intersect_radius = self.circle_radius
@@ -35,13 +40,18 @@ class CircleStrategy(Strategy):
                                          self.image_analyzer.final_image_height,
                                          self.image_analyzer.final_image_width)
 
+        if self.image_analyzer.obstacle_in_avoidance_zone:
+            error_angle += self.compute_obstacle_error()
+
+        self.cumul_error = self.cumul_error * 0.9
+        self.cumul_error += error_angle
+        self.cumul_error = np.clip(self.cumul_error, -self.MAX_CUMUL_ERROR, self.MAX_CUMUL_ERROR)
+
         if error_angle is None:
-            return self.p_coef * self.previous_error_angle
+            return self.p_coef * self.previous_error_angle + self.cumul_error * self.i_coef
         else:
-            if self.image_analyzer.obstacle_in_avoidance_zone:
-                error_angle += self.compute_obstacle_error()
             self.previous_error_angle = error_angle
-            return self.p_coef * error_angle
+            return self.p_coef * error_angle  + self.cumul_error * self.i_coef
 
     def compute_obstacle_error(self):
         if not self.image_analyzer.obstacle_in_lock_zone or self.side_avoidance is None:

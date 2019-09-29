@@ -600,10 +600,11 @@ CIRCLE = [
     {
         'instruction': 'circle',  # suiviImageLigneDroite ou suiviImageRoues
         'speed': 55,
-        'p_coef': 55,
+        'p_coef': 50,
+        'i_coef': 2,
         'clip': 150,
         'obstacles': False,
-        'circle_radius': 180,
+        'circle_radius': 170,
         'conditionFin': 'tacho',
         'tacho': 100000,
     },
