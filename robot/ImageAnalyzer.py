@@ -56,11 +56,12 @@ class ImageAnalyzer:
             mask_line = self.clean_mask_line(mask_line)
             mask_obstacles = clean_mask_obstacle(mask_obstacles)
             mask_line = self.image_warper.warp(mask_line, "line")
+            mask_line = self.clip_image(mask_line)
+
             self.compute_lines(mask_line)
 
             if self.process_obstacles:
                 mask_obstacles = self.image_warper.warp(mask_obstacles, "obstacle")
-                mask_line = self.clip_image(mask_line)
                 self.compute_obstacles(mask_line, mask_obstacles)
 
             if self.show_and_wait or self.log:
@@ -243,6 +244,11 @@ class ImageAnalyzer:
         if offset_line_height < 0 or offset_line_height > self.final_image_height:
             raise Exception("offset line height out of final image bounds")
         self.offset_baseline_height = offset_line_height
+
+    def set_circle_radius(self, circle_radius):
+        if circle_radius < 0 or circle_radius > self.final_image_height:
+            raise Exception("circle radius out of final image bounds")
+        self.circle_poly2_intersect_radius = circle_radius
 
     def set_lock_zone_radius(self, lock_zone_radius):
         if lock_zone_radius < 0 or lock_zone_radius > self.final_image_height:

@@ -602,7 +602,7 @@ CIRCLE = [
         'speed': 70,
         'p_coef': 40,
         'i_coef': 1,
-        'clip': 150,
+        'clip': 100,
         'obstacles': False,
         'circle_radius': 200,
         'conditionFin': 'circle',

@@ -10,7 +10,6 @@ class CircleStrategy(Strategy):
                  image_analyzer,
                  p_coef,
                  i_coef,
-                 circle_radius,
                  avoidance_speed,
                  nominal_speed,
                  obstacle_offset):
@@ -18,7 +17,6 @@ class CircleStrategy(Strategy):
         self.nominal_speed = nominal_speed
         self.avoidance_speed = avoidance_speed
         self.obstacle_offset = obstacle_offset
-        self.circle_radius = circle_radius
         self.p_coef = p_coef
         self.image_analyzer = image_analyzer
 
@@ -28,7 +26,6 @@ class CircleStrategy(Strategy):
     MAX_CUMUL_ERROR = 1
 
     def compute_steering(self):
-        self.image_analyzer.circle_poly2_intersect_radius = self.circle_radius
         self.image_analyzer.analyze()
 
         poly_2_coefs = self.image_analyzer.poly_2_coefs
@@ -36,7 +33,7 @@ class CircleStrategy(Strategy):
             return None
 
         error_angle = angle_intersection(*poly_2_coefs,
-                                         self.circle_radius,
+                                         self.image_analyzer.circle_poly2_intersect_radius,
                                          self.image_analyzer.final_image_height,
                                          self.image_analyzer.final_image_width)
 

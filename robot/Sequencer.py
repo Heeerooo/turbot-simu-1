@@ -94,7 +94,6 @@ class Sequencer(Component):
     def init_circle(self):
         p_coef = self.current_program['p_coef'] if 'p_coef' in self.current_program else 0
         i_coef = self.current_program['i_coef'] if 'i_coef' in self.current_program else 0
-        circle_radius = self.current_program['circle_radius'] if 'circle_radius' in self.current_program else None
         obstacle_offset = self.current_program['obstacle_offset'] if 'obstacle_offset' in self.current_program else None
         avoidance_speed = self.current_program[
             'avoidance_speed'] if 'avoidance_speed' in self.current_program else self.speed
@@ -102,7 +101,6 @@ class Sequencer(Component):
                                                             i_coef,
                                                             self.speed,
                                                             avoidance_speed,
-                                                            circle_radius,
                                                             obstacle_offset)
 
     def init_cap_standard(self):
@@ -159,6 +157,8 @@ class Sequencer(Component):
     def set_additional_params(self):
         if 'offset_baseline_height' in self.current_program:
             self.image_analyzer.set_offset_baseline_height(self.current_program['offset_baseline_height'])
+        if 'circle_radius' in self.current_program:
+            self.image_analyzer.set_circle_radius(self.current_program['circle_radius'])
         if 'display' in self.current_program:
             self.car.send_display(self.current_program['display'])
         if 'chenillard' in self.current_program:
@@ -171,6 +171,7 @@ class Sequencer(Component):
             self.image_analyzer.set_lock_zone_radius(self.current_program['lock_zone_radius'])
         if 'avoidance_zone_radius' in self.current_program:
             self.image_analyzer.set_avoidance_zone_radius(self.current_program['avoidance_zone_radius'])
+
 
     def check_cap(self):
         final_cap_mini = self.current_program['capFinalMini']

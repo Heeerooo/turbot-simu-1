@@ -23,9 +23,8 @@ class StrategyFactory:
     def create_cap_standard(self, cap_target, vitesse):
         return CapStandardStrategy(self.car, cap_target, vitesse)
 
-    def create_circle(self, p_coef, i_coef, nominal_speed, avoidance_speed, circle_radius=150, obstacle_offset=0):
-        return CircleStrategy(self.image_analyzer, p_coef, i_coef, circle_radius, avoidance_speed, nominal_speed,
-                              obstacle_offset)
+    def create_circle(self, p_coef, i_coef, nominal_speed, avoidance_speed, obstacle_offset=0):
+        return CircleStrategy(self.image_analyzer, p_coef, i_coef, avoidance_speed, nominal_speed, obstacle_offset)
 
     def create_cap_offset(self, cap_target, vitesse, p_correction_coef, i_correction_coef):
         return CapOffsetStrategy(self.car, self.image_analyzer, cap_target, vitesse, p_correction_coef,
