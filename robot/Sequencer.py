@@ -1,7 +1,10 @@
 # encoding:utf-8
 import json
 
+from circle import angle_intersection
 from robot.Component import Component
+
+RAD_TO_DEG = 57.2958
 
 
 class Sequencer(Component):
@@ -194,6 +197,20 @@ class Sequencer(Component):
     def check_gyro_stable(self):
         return self.car.check_gyro_stable()
 
+    def check_circle(self):
+        circle_angle_max = self.current_program['circle_angle_max']
+        self.image_analyzer.analyze()
+        poly_2_coefs = self.image_analyzer.poly_2_coefs
+        if poly_2_coefs is None:
+            return False
+
+        error_angle = angle_intersection(*poly_2_coefs,
+                                         self.image_analyzer.circle_poly2_intersect_radius,
+                                         self.image_analyzer.final_image_height,
+                                         self.image_analyzer.final_image_width)
+        error_angle_deg = error_angle * RAD_TO_DEG
+        return error_angle_deg > circle_angle_max
+
     def check_end_sequence(self):
         # Recupere la condition de fin
         end_condition = self.current_program['conditionFin']
@@ -205,7 +222,8 @@ class Sequencer(Component):
             'tacho': self.check_tacho,
             'immediat': self.end_now,
             'attendBouton': self.check_button,
-            'attendreGyroStable': self.check_gyro_stable
+            'attendreGyroStable': self.check_gyro_stable,
+            'circle': self.check_circle,
         }
 
         if end_condition not in end_conditions_check.keys():

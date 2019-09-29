@@ -33,7 +33,7 @@ class Car(ABC):
         return self.time.time()
 
     def get_images(self):
-        return self.camera.mask_line, self.camera.mask_obstacles
+        return self.camera.get_images()
 
     def sleep(self, delay):
         return self.time.sleep(delay)
@@ -52,6 +52,10 @@ class Car(ABC):
 
     @abstractmethod
     def has_gyro_data(self):
+        pass
+
+    @abstractmethod
+    def has_new_image(self):
         pass
 
     @abstractmethod

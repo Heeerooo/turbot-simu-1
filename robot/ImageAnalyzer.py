@@ -48,6 +48,9 @@ class ImageAnalyzer:
         self.offset_baseline_height = None
 
     def analyze(self):
+        if not self.car.has_new_image():
+            return
+
         mask_line, mask_obstacles = self.car.get_images()
         if mask_line is not None and mask_obstacles is not None:
             mask_line = self.clean_mask_line(mask_line)
@@ -80,8 +83,9 @@ class ImageAnalyzer:
     def draw_log_image(self, mask_line, mask_obstacles):
         # Display final mask for debug
         self.final_mask_for_display = np.zeros((mask_line.shape[0], mask_line.shape[1], 3))
-        self.final_mask_for_display[..., 1] = mask_obstacles
         self.final_mask_for_display[..., 2] = mask_line
+        if self.process_obstacles:
+            self.final_mask_for_display[..., 1] = mask_obstacles
         if self.offset_baseline_height is not None:
             self.draw_line_offset_line()
         if self.poly_1_coefs is not None:

@@ -18,6 +18,9 @@ class SimuCar(Car):
     def has_gyro_data(self):
         return True
 
+    def has_new_image(self):
+        return self.camera.has_new_image()
+
     def get_push_button(self):
         pass
 

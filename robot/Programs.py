@@ -599,6 +599,29 @@ CAP_OFFSET = [
 CIRCLE = [
     {
         'instruction': 'circle',  # suiviImageLigneDroite ou suiviImageRoues
+        'speed': 70,
+        'p_coef': 40,
+        'i_coef': 1,
+        'clip': 150,
+        'obstacles': False,
+        'circle_radius': 200,
+        'conditionFin': 'circle',
+        'circle_angle_max': 5,
+    },
+    {
+        'instruction': 'circle',  # suiviImageLigneDroite ou suiviImageRoues
+        'speed': 55,
+        'p_coef': 50,
+        'i_coef': 2,
+        'clip': 150,
+        'obstacles': False,
+        'circle_radius': 150,
+        'conditionFin': 'cap',
+        'capFinalMini': 160,
+        'capFinalMaxi': 270,
+    },
+    {
+        'instruction': 'circle',  # suiviImageLigneDroite ou suiviImageRoues
         'speed': 55,
         'p_coef': 50,
         'i_coef': 2,

@@ -15,7 +15,10 @@ class Camera(Component):
 
     mask_obstacles = None
 
+    fresh_image = False
+
     def execute(self):
+        self.fresh_image = True
         resolution, byte_array_image_string = self.simulator.get_gray_image(self.line_cam_handle, CAMERA_DELAY)
         resolution_obstacles, byte_array_image_string_obstacle = self.simulator.get_gray_image(
             self.obstacles_cam_handle, CAMERA_DELAY)
@@ -25,6 +28,13 @@ class Camera(Component):
             mask_line = convert_image_to_numpy(byte_array_image_string, resolution)
             self.mask_obstacles = convert_image_to_numpy(byte_array_image_string_obstacle, resolution_obstacles)
             self.mask_line = remove_line_behind_obstacles(mask_line, self.mask_obstacles)
+
+    def has_new_image(self):
+        return self.fresh_image
+
+    def get_images(self):
+        self.fresh_image = False
+        return self.mask_line, self.mask_obstacles
 
 
 def remove_line_behind_obstacles(mask_line, mask_obstacles):
