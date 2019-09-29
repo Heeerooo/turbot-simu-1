@@ -686,6 +686,7 @@ CIRCLE_DLVV = [
         'obstacle_offset': 0.2,
         'avoidance_speed': 20,
         'avoidance_zone_radius': 200,
+        'obstacles': True,
         'circle_radius': 150,
         'lock_zone_radius': 160,
         'conditionFin': 'tacho',
