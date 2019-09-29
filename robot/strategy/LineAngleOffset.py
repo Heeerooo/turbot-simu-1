@@ -44,7 +44,7 @@ class LineAngleOffset(Strategy):
 
         self.cumul_offset = self.cumul_offset * 0.9
         self.cumul_offset += error_offset
-        np.clip(self.cumul_offset,-1000,1000)
+        self.cumul_offset = np.clip(self.cumul_offset,-1000,1000)
 
         if coeff_poly_1_line is not None and line_offset is not None:
             angle_line = -np.arctan(coeff_poly_1_line[0])

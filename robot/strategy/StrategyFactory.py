@@ -31,5 +31,5 @@ class StrategyFactory:
         return CapOffsetStrategy(self.car, self.image_analyzer, cap_target, vitesse, p_correction_coef,
                                  i_correction_coef)
 
-    def create_turn_offset(self, steering_target, p_coef):
-        return TurnOffsetStrategy(self.image_analyzer, steering_target, p_coef)
+    def create_turn_offset(self, steering_target, p_coef, i_coef):
+        return TurnOffsetStrategy(self.image_analyzer, steering_target, p_coef, i_coef)
