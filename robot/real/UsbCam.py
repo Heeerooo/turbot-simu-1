@@ -10,3 +10,9 @@ class UsbCam:
 
     def read(self):
         return self.stream.read()[1]
+
+    def release(self):
+        self.stream.release()
+
+    def open(self):
+        self.stream.open(CAM_HANDLE)

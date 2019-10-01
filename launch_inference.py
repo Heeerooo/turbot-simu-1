@@ -28,7 +28,6 @@ MASK_LINE_FILE_TMP = RAM_DISK_DIR + "/mask_line.tmp.npy"
 
 LOGS_DIR = "logs/original"
 
-
 SIZE_LOG_FRAMES_STACK = 10
 
 FRAME_CYCLE_LOG = 3
@@ -63,15 +62,16 @@ while True:
     # Check if inference is enabled
     if Path(INFERENCE_DISABLE_FILE).is_file():
         if running:
+            usbCam.release()
             print("Wait robot to start")
         running = False
         time.sleep(0.1)
         continue
     else:
         if not running:
+            usbCam.open()
             print("Running")
         running = True
-
 
     frame = usbCam.read()
 

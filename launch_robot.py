@@ -91,6 +91,8 @@ logger = Logger(image_analyzer=image_analyzer,
 
 strategy_factory = StrategyFactory(car, image_analyzer, logger)
 
+
+
 sequencer = Sequencer(car=car,
                       program=Programs.TEST_CIRCLE,
                       strategy_factory=strategy_factory,
