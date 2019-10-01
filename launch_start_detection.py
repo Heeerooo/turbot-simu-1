@@ -7,7 +7,7 @@ from robot.real.UsbCam import UsbCam
 
 RAM_DISK_DIR = "/tmp_ram"
 
-INFERENCE_DISABLE_FILE = RAM_DISK_DIR + "inference.disable"
+INFERENCE_DISABLE_FILE = RAM_DISK_DIR + "/inference.disable"
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 

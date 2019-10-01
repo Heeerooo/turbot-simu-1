@@ -16,7 +16,7 @@ MODEL_FILENAME = 'deep_learning/models/final_race_model_5_3.h5'
 
 RAM_DISK_DIR = "/tmp_ram"
 
-INFERENCE_DISABLE_FILE = RAM_DISK_DIR + "inference.disable"
+INFERENCE_DISABLE_FILE = RAM_DISK_DIR + "/inference.disable"
 
 MASK_LINE_FILE = RAM_DISK_DIR + "/mask_line.npy"
 
