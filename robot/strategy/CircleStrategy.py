@@ -47,14 +47,15 @@ class CircleStrategy(Strategy):
         #                                  self.image_analyzer.final_image_width)
 
         # FIXME test purposes . poly1 instead of poly2
+        print("WARNING test purposes poly1 instead of poly2")
         poly_2_coefs = self.image_analyzer.poly_1_coefs
         if poly_2_coefs is None:
             error_angle = None
         else:
             error_angle = angle_intersection(0, poly_2_coefs[0], poly_2_coefs[1],
-                                         self.image_analyzer.circle_poly2_intersect_radius,
-                                         self.image_analyzer.final_image_height,
-                                         self.image_analyzer.final_image_width)
+                                             self.image_analyzer.circle_poly2_intersect_radius,
+                                             self.image_analyzer.final_image_height,
+                                             self.image_analyzer.final_image_width)
 
         self.log_error_angle = error_angle
 
@@ -63,7 +64,6 @@ class CircleStrategy(Strategy):
         else:
 
             self.previous_raw_error = error_angle
-
 
         error_angle += self.compute_obstacle_error()
 
@@ -78,9 +78,8 @@ class CircleStrategy(Strategy):
         ecart_error = error_angle - self.previous_error_angle
         self.log_error_angle_4 = error_angle
 
-
         self.previous_error_angle = error_angle
-        return self.p_coef * error_angle  + self.cumul_error * self.i_coef + ecart_error * self.d_coef
+        return self.p_coef * error_angle + self.cumul_error * self.i_coef + ecart_error * self.d_coef
 
     def compute_obstacle_error(self):
         # Compute side avoidance if obstacle not in lock zone or no side computed yet
@@ -89,11 +88,12 @@ class CircleStrategy(Strategy):
 
         if self.side_avoidance is not None and self.image_analyzer.obstacle_in_avoidance_zone \
                 and obstacle_line_distance_small_enough(self.image_analyzer.distance_obstacle_line,
-                                                   self.image_analyzer.side_avoidance):
+                                                        self.image_analyzer.side_avoidance):
 
             # obstacle detected, increase progressively offset
             self.current_obstacle_offset += self.AVOID_OFFSET_INCREASE_STEP * self.side_avoidance
-            self.current_obstacle_offset = np.clip(self.current_obstacle_offset, - self.obstacle_offset, self.obstacle_offset)
+            self.current_obstacle_offset = np.clip(self.current_obstacle_offset, - self.obstacle_offset,
+                                                   self.obstacle_offset)
         else:
             # No obstacle, obstacle offset returns to zero
             if self.current_obstacle_offset > 0:
@@ -108,7 +108,7 @@ class CircleStrategy(Strategy):
     def compute_speed(self):
         if self.image_analyzer.obstacle_in_slow_zone \
                 and obstacle_line_distance_small_enough(self.image_analyzer.distance_obstacle_line,
-                                                   self.image_analyzer.obstacle_poly2_side):
+                                                        self.image_analyzer.obstacle_poly2_side):
             return self.avoidance_speed
         else:
             return self.nominal_speed

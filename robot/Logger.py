@@ -71,10 +71,10 @@ class Logger(Component):
                                        None,
                                        None,
                                        None,
-                                       self.strategy.log_error_angle,
-                                       self.strategy.log_error_angle_2,
-                                       self.strategy.log_error_angle_3,
-                                       self.strategy.log_error_angle_4,
+                                       self.strategy.log_error_angle if self.strategy is not None else None,
+                                       self.strategy.log_error_angle_2 if self.strategy is not None else None,
+                                       self.strategy.log_error_angle_3 if self.strategy is not None else None,
+                                       self.strategy.log_error_angle_4 if self.strategy is not None else None,
                                        ])
 
                 if len(self.log_array) >= self.size_log_stack:
