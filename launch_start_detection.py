@@ -9,22 +9,22 @@ INFERENCE_DISABLE_FILE = "inference.disable"
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 
-usb_cam = UsbCam()
-
 time = Time()
 
-start_light_detector = StartLightDetector(detect_zone_center=(100,100),
-                                          detect_zone_shape=(100,100),
+print("disabling inference")
+open(current_dir + "/" + INFERENCE_DISABLE_FILE, 'a').close()
+
+time.sleep(0.5)
+
+usb_cam = UsbCam()
+
+start_light_detector = StartLightDetector(detect_zone_center=(100, 100),
+                                          detect_zone_shape=(100, 100),
                                           time=time,
                                           usb_cam=usb_cam,
                                           delay_seconds=0.1,
                                           thresh=30)
 
-
-print("disabling inference")
-open(current_dir + "/" + INFERENCE_DISABLE_FILE, 'a').close()
-
-time.sleep(1)
 while True:
 
     if start_light_detector.detect_start_light():

@@ -34,7 +34,7 @@ FRAME_CYCLE_LOG = 3
 
 frame_index = 1
 
-log_enabled = True
+log_enabled = False
 
 compress_log = False
 
