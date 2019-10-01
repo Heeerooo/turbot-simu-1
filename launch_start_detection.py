@@ -6,12 +6,14 @@ usb_cam = UsbCam()
 
 time = Time()
 
-start_light_detector = StartLightDetector(detect_zone_center=(0,0),
+start_light_detector = StartLightDetector(detect_zone_center=(100,100),
                                           detect_zone_shape=(100,100),
                                           time=time,
                                           usb_cam=usb_cam,
                                           delay_seconds=0.1,
-                                          thresh=10000)
+                                          thresh=30)
 while True:
-    print(start_light_detector.detect_start_light())
+    if start_light_detector.detect_start_light():
+        print("Go")
+        break
     time.sleep(0.01)
