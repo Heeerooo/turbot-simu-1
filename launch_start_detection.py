@@ -5,7 +5,9 @@ from robot.real.StartLightDetector import StartLightDetector
 from robot.real.Time import Time
 from robot.real.UsbCam import UsbCam
 
-INFERENCE_DISABLE_FILE = "inference.disable"
+RAM_DISK_DIR = "/tmp_ram"
+
+INFERENCE_DISABLE_FILE = RAM_DISK_DIR + "inference.disable"
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 
