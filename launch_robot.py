@@ -31,11 +31,13 @@ MASK_OBSTACLE_FILE = RAM_DISK_DIR + "/mask_obstacle.npy"
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 
-frame_cycle_log = 5
+frame_cycle_log = 3
+
+size_log_stack = 3
 
 log_enable = True
 
-compress_log = True
+compress_log = False
 
 show_loop_time = False
 
@@ -68,31 +70,33 @@ image_warper = ImageWarper(car=car,
                            nb_images_delay=NB_IMAGES_DELAY,
                            tacho_coef=TACHO_COEF,
                            show_and_wait=False,
-                           rotation_enabled=True,
-                           translation_enabled=True)
+                           rotation_enabled=False,
+                           translation_enabled=False)
 
 image_analyzer = ImageAnalyzer(car=car,
                                image_warper=image_warper,
                                log=log_enable,
                                show_and_wait=False)
 
-strategy_factory = StrategyFactory(car, image_analyzer)
-
-sequencer = Sequencer(car=car,
-                      program=Programs.TEST,
-                      strategy_factory=strategy_factory,
-                      image_analyzer=image_analyzer)
-
 logger = Logger(image_analyzer=image_analyzer,
                 car=car,
-                sequencer=sequencer,
                 image_warper=image_warper,
                 steering_controller=steering_controller,
                 time=time,
                 log_dir=current_dir + "/logs/robot",
+                size_log_stack=size_log_stack,
                 log_persist_enable=log_enable,
                 frame_cycle_log=frame_cycle_log,
                 compress_log=compress_log)
+
+strategy_factory = StrategyFactory(car, image_analyzer, logger)
+
+sequencer = Sequencer(car=car,
+                      program=Programs.TEST_CIRCLE,
+                      strategy_factory=strategy_factory,
+                      image_analyzer=image_analyzer)
+
+
 
 # Order matter, components will be executed one by one
 executable_components = [arduino,
@@ -124,8 +128,10 @@ try:
             print("loop time", time.time() - begin_loop_time)
         # Time needed by arduino to receive next command
         time.sleep(0.005)
-except KeyboardInterrupt as e:
+except (KeyboardInterrupt, IndexError) as e:
     vesc.send_speed_command(0)
+    logger.dump_logs()
     open(current_dir + "/" + INFERENCE_DISABLE_FILE, 'a').close()
+    print(e)
     print("\n")
     print("Exiting..")

@@ -19,6 +19,7 @@ class ImageAnalyzer:
     pixel_offset_poly1 = None
     distance_obstacle_line = None
     side_avoidance = None
+    obstacle_poly2_side = None
     offset_baseline_height = None
     lock_zone_radius = None
     avoidance_zone_radius = None
@@ -80,6 +81,7 @@ class ImageAnalyzer:
 
     def compute_obstacles(self, mask_line, mask_obstacles):
         self.compute_obstacle_line_position(mask_line, mask_obstacles)
+        self.compute_obstacle_poly2_position(mask_obstacles)
         self.compute_obstacle_lock_zone(mask_obstacles)
         self.compute_obstacle_avoidance_zone(mask_obstacles)
         self.compute_obstacle_slow_zone(mask_obstacles)
@@ -238,6 +240,44 @@ class ImageAnalyzer:
 
         self.side_avoidance = 1 if (abs(distance_left_obstacle) > abs(distance_right_obstacle)) else -1
         self.distance_obstacle_line = min(distance_left_obstacle, distance_right_obstacle, key=abs)
+
+    def compute_obstacle_poly2_position(self, mask_obstacles):
+
+        if self.poly_1_coefs is None:
+            return None
+
+        # Get coordinates of poly points
+        def poly2(x):
+            return self.poly_2_coefs[0] * x * x + self.poly_2_coefs[1] * x + self.poly_2_coefs[2]
+
+        def poly1(x):
+            return self.poly_1_coefs[0] * x + self.poly_1_coefs[1]
+        
+        # Get coordinates of all obstacles points within obstacle circle
+        OBSTACLE_CIRCLE_RADIUS = 300
+        shape = mask_obstacles.shape
+        circle_zone_image = np.zeros(mask_obstacles.shape)
+        cv2.circle(circle_zone_image, (round(shape[1] / 2), shape[0]), OBSTACLE_CIRCLE_RADIUS, 255, -1)
+        obstacles_in_circle = np.logical_and(mask_obstacles, circle_zone_image)
+
+        obstacle_pixels_x, obstacle_pixels_y, = np.nonzero(obstacles_in_circle)
+
+        # Compute y for every x in obstacle
+        poly2_obstacle_y = poly1(obstacle_pixels_x)
+        nb_points_right = (poly2_obstacle_y < obstacle_pixels_y).sum()
+        nb_points_left = (poly2_obstacle_y > obstacle_pixels_y).sum()
+
+        # Show obstacle and poly2 for debug
+        # matrix = np.zeros((mask_obstacles.shape[0], mask_obstacles.shape[1],3))
+        # for i in range(len(obstacle_pixels_x)):
+        #     y = np.clip(poly2_obstacle_y[i], 0, matrix.shape[1] - 1)
+        #     matrix[obstacle_pixels_x[i], int(y),1] = 1
+        #     matrix[obstacle_pixels_x[i], obstacle_pixels_y[i], 0] = 1
+        # cv2.imshow("Matrix", matrix)
+        # cv2.waitKey(1)
+
+        self.obstacle_poly2_side = 1 if nb_points_right < nb_points_left else -1
+
 
     def set_clip_length(self, clip_length):
         if clip_length < 0 or clip_length > self.final_image_height:

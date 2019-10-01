@@ -31,13 +31,13 @@ LOGS_DIR = "logs/original"
 
 SIZE_LOG_FRAMES_STACK = 10
 
-FRAME_CYCLE_LOG = 5
+FRAME_CYCLE_LOG = 3
 
 frame_index = 1
 
 log_enabled = True
 
-compress_log = True
+compress_log = False
 
 # Bug fix for tensorflow on TX2
 # See here: https://devtalk.nvidia.com/default/topic/1030875/jetson-tx2/gpu-sync-failed-in-tx2-when-running-tensorflow/

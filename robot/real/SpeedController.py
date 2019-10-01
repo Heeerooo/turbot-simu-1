@@ -18,9 +18,9 @@ class SpeedController(Component):
         self.REVERSE_SPEED = 10000
         self.speed = 0
         self.speed_target = 0
-        self.max_acceleration_step = 15000  # Max acceleration in speed unit per seconds
+        self.max_acceleration_step = 35000  # Max acceleration in speed unit per seconds
         self.min_acceleration_step = 0
-        self.max_deceleration_step = 15000  # Max deceleration in speed unit per seconds
+        self.max_deceleration_step = 35000  # Max deceleration in speed unit per seconds
         self.min_deceleration_step = 0
         self.acceleration_step = self.max_acceleration_step
         self.deceleration_step = self.max_deceleration_step

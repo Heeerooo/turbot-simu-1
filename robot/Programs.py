@@ -509,10 +509,50 @@ HIPPODROME = [
     }
 ]
 
-TEST = [
+TEST_SPEED = [
+    {
+        'label': 'waitGyroStable',  # Attend stabilisation du gyro
+        'instruction': 'tourne',
+        'display': 'WAITG',
+        'chenillard': False,
+        'positionRoues': 0,
+        'vitesse': 0,
+        'conditionFin': 'attendreGyroStable'
+    },
+    {
+        'instruction': 'capOffset',  # suiviImageLigneDroite ou suiviImageRoues
+        'speed': 50,
+        'p_correction_coef': 0.01,
+        'i_correction_coef': 0.0,
+        'clip': 150,
+        'offset_baseline_height': 50,
+        'obstacles': False,
+        'conditionFin': 'tacho',
+        'tacho': 700,
+    },
+    {
+        'instruction': 'setTacho',  # Memorise le tacho actuel
+        'conditionFin': 'immediat'
+    },
+    {
+        'instruction': 'capOffset',  # suiviImageLigneDroite ou suiviImageRoues
+        'speed': 25,
+        'p_correction_coef': 0.01,
+        'i_correction_coef': 0.0,
+        'circle_radius': 120,
+        'clip': 150,
+        'offset_baseline_height': 50,
+        'obstacles': False,
+        'conditionFin': 'tacho',
+        'duree': 500,
+    },
+    {
+        'instruction': 'setTacho',  # Memorise le tacho actuel
+        'conditionFin': 'immediat'
+    },
     {
         'instruction': 'circle',  # suiviImageLigneDroite ou suiviImageRoues
-        'speed': 15,
+        'speed': 25,
         'obstacle_offset': 0.5,
         'avoidance_speed': 14,
         'slow_zone_radius': 300,
@@ -520,6 +560,60 @@ TEST = [
         'lock_zone_radius': 160,
         'p_coef': 70,
         'i_coef': 2,
+        'd_coef': 150,
+        'clip': 150,
+        'obstacles': False,
+        'circle_radius': 120,
+        'conditionFin': 'cap',
+        'capFinalMini': 20,  # En relatif par rapport au cap initial
+        'capFinalMaxi': 200
+    },
+    {
+        'instruction': 'tourne',  # Puis finit le virage 180°
+        'positionRoues': 60,
+        'speed': 25,
+        'conditionFin': 'cap',
+        'capFinalMini': 80,  # En relatif par rapport au cap initial
+        'capFinalMaxi': 270  # En relatif par rapport au cap initial
+    },
+    {
+        'instruction': 'tourne',  # Puis finit le virage 180°
+        'positionRoues': 50,
+        'speed': 25,
+        'conditionFin': 'cap',
+        'capFinalMini': 170,  # En relatif par rapport au cap initial
+        'capFinalMaxi': 270  # En relatif par rapport au cap initial
+    },
+    {
+        'instruction': 'circle',  # suiviImageLigneDroite ou suiviImageRoues
+        'speed': 0,
+        'obstacle_offset': 0.5,
+        'avoidance_speed': 14,
+        'slow_zone_radius': 300,
+        'avoidance_zone_radius': 250,
+        'lock_zone_radius': 160,
+        'p_coef': 70,
+        'i_coef': 2,
+        'd_coef': 150,
+        'clip': 150,
+        'obstacles': False,
+        'circle_radius': 120,
+        'conditionFin': 'duree',
+        'duree': 5,
+    },
+]
+
+TEST_CIRCLE = [
+    {
+        'instruction': 'circle',  # suiviImageLigneDroite ou suiviImageRoues
+        'speed': 15,
+        'obstacle_offset': 0.5,
+        'avoidance_speed': 14,
+        'slow_zone_radius': 300,
+        'avoidance_zone_radius': 160,
+        'lock_zone_radius': 160,
+        'p_coef': 100,
+        'i_coef': 0,
         'd_coef': 150,
         'clip': 150,
         'obstacles': True,

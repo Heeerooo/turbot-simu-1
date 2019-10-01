@@ -22,7 +22,7 @@ LOG_FORMAT = {
 class Logger(Component):
 
     def __init__(self, image_analyzer,
-                 car, sequencer, log_dir,
+                 car, log_dir,
                  time, steering_controller, image_warper,
                  size_log_stack=5,
                  frame_cycle_log=10,
@@ -38,7 +38,6 @@ class Logger(Component):
         self.time = time
         self.log_dir = log_dir
         self.image_analyzer = image_analyzer
-        self.sequencer = sequencer
         self.car = car
         self.previous_joint_pos = 0
         self.first_pos = None
@@ -50,6 +49,9 @@ class Logger(Component):
 
     def execute(self):
         self.log()
+
+
+    strategy = None
 
     def log(self):
 
@@ -68,21 +70,27 @@ class Logger(Component):
                                        # self.image_warper.rotated
                                        None,
                                        None,
-                                       None
+                                       None,
+                                       self.strategy.log_error_angle,
+                                       self.strategy.log_error_angle_2,
+                                       self.strategy.log_error_angle_3,
+                                       self.strategy.log_error_angle_4,
                                        ])
 
                 if len(self.log_array) >= self.size_log_stack:
-                    begin_log_time = self.time.time()
-                    file_path = self.log_dir + "/" + self.run_session + "_" + "%03d" % self.increment_session
-                    if self.compress_log:
-                        with gzip.open(file_path + ".pgz", "w")as file:
-                            pickle.dump(self.log_array, file)
-                    else:
-                        with open(file_path + ".pickle", "wb")as file:
-                            pickle.dump(self.log_array, file)
-                    # print("log time", self.time.time() - begin_log_time)
+                    self.dump_logs()
                     self.increment_session += 1
                     self.log_array.clear()
 
             self.frame_index += 1
 
+    def dump_logs(self):
+        begin_log_time = self.time.time()
+        file_path = self.log_dir + "/" + self.run_session + "_" + "%03d" % self.increment_session
+        if self.compress_log:
+            with gzip.open(file_path + ".pgz", "w")as file:
+                pickle.dump(self.log_array, file)
+        else:
+            with open(file_path + ".pickle", "wb")as file:
+                pickle.dump(self.log_array, file)
+        # print("log time", self.time.time() - begin_log_time)

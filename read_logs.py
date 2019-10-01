@@ -85,6 +85,10 @@ for file_path in sorted(glob.glob(COMPUTED_LOG_DIR + "/run_*"), key=lambda x: os
                 cv2.imshow("perspective", log[8])
             if log[9] is not None:
                 cv2.imshow("translated", log[9])
-            if log[9] is not None:
+            if log[10] is not None:
                 cv2.imshow("rotated", log[10])
+            print("log error angle  ", log[11])
+            print("log error angle 2", log[12])
+            print("log error angle 3", log[13])
+            print("log error angle 4", log[14])
             cv2.waitKey(0)

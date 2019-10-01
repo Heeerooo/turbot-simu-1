@@ -64,13 +64,6 @@ class Sequencer(Component):
         else:
             self.car.set_led(True)
 
-    def set_cap(self):
-        target = self.car.get_cap()
-        self.cap_target = target
-
-    def add_cap(self):
-        self.cap_target = (self.cap_target + self.current_program['cap']) % 360
-
     def set_tacho(self):
         self.tacho = self.car.get_tacho()
 
@@ -106,7 +99,9 @@ class Sequencer(Component):
                                                             obstacle_offset)
 
     def init_cap_standard(self):
-        self.strategy = self.strategy_factory.create_cap_standard(self.cap_target, self.current_program['speed'])
+        cap_target = self.current_program[
+            'cap_target'] if 'cap_target' in self.current_program else 0
+        self.strategy = self.strategy_factory.create_cap_standard(cap_target, self.current_program['speed'])
 
     def init_cap_offset(self):
         speed = self.current_program['speed']
@@ -114,7 +109,9 @@ class Sequencer(Component):
             'p_correction_coef'] if 'p_correction_coef' in self.current_program else 0
         i_correction_coef = self.current_program[
             'i_correction_coef'] if 'i_correction_coef' in self.current_program else 0
-        self.strategy = self.strategy_factory.create_cap_offset(self.cap_target, speed, p_correction_coef,
+        cap_target = self.current_program[
+            'cap_target'] if 'cap_target' in self.current_program else 0
+        self.strategy = self.strategy_factory.create_cap_offset((cap_target + self.base_gyro) % 360, speed, p_correction_coef,
                                                                 i_correction_coef)
 
     def init_turn_offset(self):
@@ -137,9 +134,7 @@ class Sequencer(Component):
 
         # Applique l'instruction
         instructions_actions = {
-            'setCap': self.set_cap,
             'setTacho': self.set_tacho,
-            'ajouteCap': self.add_cap,
             'tourne': self.turn,
             'lineAngleOffset': self.init_lao,
             'circle': self.init_circle,
@@ -208,7 +203,10 @@ class Sequencer(Component):
         return button_value
 
     def check_gyro_stable(self):
-        return self.car.check_gyro_stable()
+        gyro_stable = self.car.check_gyro_stable()
+        if gyro_stable:
+            self.base_gyro = self.car.get_cap()
+        return gyro_stable
 
     def check_circle(self):
         circle_angle_max = self.current_program['circle_angle_max']
@@ -217,11 +215,12 @@ class Sequencer(Component):
         if poly_2_coefs is None:
             return False
 
-        error_angle = angle_intersection(*poly_2_coefs,
+        error_angle = angle_intersection(poly_2_coefs[0],poly_2_coefs[1],poly_2_coefs[2],
                                          self.image_analyzer.circle_poly2_intersect_radius,
                                          self.image_analyzer.final_image_height,
                                          self.image_analyzer.final_image_width)
         error_angle_deg = error_angle * RAD_TO_DEG
+        print("error angle", error_angle_deg)
         return error_angle_deg > circle_angle_max
 
     def check_end_sequence(self):
@@ -259,8 +258,8 @@ class Sequencer(Component):
 
     def check_delta_cap_reached(self, final_cap_min, final_cap_max):
 
-        absolute_cap_mini = (self.cap_target + final_cap_min) % 360
-        absolute_cap_maxi = (self.cap_target + final_cap_max) % 360
+        absolute_cap_mini = (self.base_gyro + final_cap_min) % 360
+        absolute_cap_maxi = (self.base_gyro + final_cap_max) % 360
 
         gap_cap_mini = (((self.car.get_cap() - absolute_cap_mini) + 180) % 360) - 180
         gap_cap_maxi = (((self.car.get_cap() - absolute_cap_maxi) + 180) % 360) - 180

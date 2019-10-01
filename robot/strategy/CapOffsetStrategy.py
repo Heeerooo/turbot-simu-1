@@ -9,7 +9,7 @@ class CapOffsetStrategy(Strategy):
     COEFF_PROPORTIONNEL_POUR_VITESSE_MIN = 2.0  # 2.0 lors des essais post TRR2017
     COEFF_PROPORTIONNEL_IMAGE_POUR_VITESSE_NOMINALE = 1.0  # 0.3 lors des essais post TRR2017
     COEFF_PROPORTIONNEL_IMAGE_POUR_VITESSE_MIN = 2.0  # 2.0 lors des essais post TRR2018
-    VITESSE_NOMINALE = 75  # 45 lors des manches de la TRR2017 (surtout pas mettre 45, mettre la speed max utilisee, sinon le coeff prop peut devenir negatif ! Teste en 2017 apres la course, stable a speed 75)
+    VITESSE_NOMINALE = 100  # 45 lors des manches de la TRR2017 (surtout pas mettre 45, mettre la speed max utilisee, sinon le coeff prop peut devenir negatif ! Teste en 2017 apres la course, stable a speed 75)
     VITESSE_MIN = 20  # 25 lors des manches de la TRR2017
 
     COEFF_INTEGRAL = 0.032  # 0.064 lors des essais de la veille TRR2017
@@ -34,7 +34,8 @@ class CapOffsetStrategy(Strategy):
 
     def compute_steering(self):
         self.image_analyzer.analyze()
-        error_offset = self.image_analyzer.pixel_offset_line
+        error_offset = self.image_analyzer.pixel_offset_poly1
+
 
         if error_offset is not None:
             self.cumul_error_offset = self.cumul_error_offset * 0.9
@@ -48,8 +49,11 @@ class CapOffsetStrategy(Strategy):
                                      -self.MAX_CORRECTION_CAP_IMAGE_LIGNE_DROITE,
                                      self.MAX_CORRECTION_CAP_IMAGE_LIGNE_DROITE)
             self.cap_target += correction_cap
+            print("correction_cap", correction_cap)
 
         error_cap = (((self.car.get_cap() - self.cap_target) + 180) % 360) - 180
+
+        print("error_cap", error_cap)
         # Si pas suivi image, on calcule l es termes integral et derivee
         self.cumul_error_cap = (self.cumul_error_cap / self.COEFF_AMORTISSEMENT_INTEGRAL) + error_cap
         # Maintient le cumul des erreurs à une valeur raisonnable
