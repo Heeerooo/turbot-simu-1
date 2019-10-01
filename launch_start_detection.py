@@ -14,7 +14,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 time = Time()
 
 print("disabling inference")
-open(current_dir + "/" + INFERENCE_DISABLE_FILE, 'a').close()
+open(INFERENCE_DISABLE_FILE, 'a').close()
 
 time.sleep(0.5)
 

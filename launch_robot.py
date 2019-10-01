@@ -21,9 +21,9 @@ from robot.real.Vesc import Vesc
 from robot.simu.Config import TACHO_COEF
 from robot.strategy.StrategyFactory import StrategyFactory
 
-INFERENCE_DISABLE_FILE = "inference.disable"
-
 RAM_DISK_DIR = "/tmp_ram"
+
+INFERENCE_DISABLE_FILE = RAM_DISK_DIR + "inference.disable"
 
 MASK_LINE_FILE = RAM_DISK_DIR + "/mask_line.npy"
 
@@ -129,7 +129,7 @@ try:
 except (KeyboardInterrupt, IndexError) as e:
     vesc.send_speed_command(0)
     logger.dump_logs()
-    open(current_dir + "/" + INFERENCE_DISABLE_FILE, 'a').close()
+    open(INFERENCE_DISABLE_FILE, 'a').close()
     print(e)
     print("\n")
     print("Exiting..")
