@@ -1,3 +1,6 @@
+import cv2
+
+
 class StartLightDetector:
 
     def __init__(self, detect_zone_center, detect_zone_shape, time, usb_cam, thresh, delay_seconds):
@@ -18,13 +21,16 @@ class StartLightDetector:
         if self.time.time() - self.previous_detection_time < self.delay_seconds:
             return False
 
-        current_image = self.usb_cam.read
+        current_image = self.usb_cam.read()
         start_x = self.detect_zone_center[0] - self.detect_zone_shape[0] / 2
         end_x = self.detect_zone_center[0] + self.detect_zone_shape[0] / 2
         start_y = self.detect_zone_center[1] - self.detect_zone_shape[1] / 2
         end_y = self.detect_zone_center[1] + self.detect_zone_shape[1] / 2
 
         detect_zone = current_image[start_x:end_x, start_y:end_y, :]
+
+        cv2.imshow("detect zone", detect_zone)
+        cv2.waitKey(0)
 
         average_light_intensity = detect_zone.sum() / (detect_zone.shape[0] * detect_zone.shape[1])
 
