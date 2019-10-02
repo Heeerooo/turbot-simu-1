@@ -11,7 +11,8 @@ class StartLightDetector:
     previous_average_light_intensity = None
     previous_detection_time = 0
 
-    def reset(self):
+    def start(self):
+        self.usb_cam.open()
         previous_average_light_intensity = None
 
     def detect_start_light(self):
@@ -49,3 +50,6 @@ class StartLightDetector:
         self.previous_detection_time = self.time.time()
 
         return delta_intensity > self.thresh
+
+    def stop(self):
+        self.usb_cam.release()

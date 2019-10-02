@@ -3,6 +3,7 @@ import os
 import time
 from pathlib import Path
 
+from InferenceEnable import enable_inference, disable_inference
 from robot import Programs
 from robot.ImageAnalyzer import ImageAnalyzer
 from robot.ImageWarper import ImageWarper
@@ -14,16 +15,16 @@ from robot.real.Config import NB_IMAGES_DELAY
 from robot.real.Gyro import Gyro
 from robot.real.RealCar import RealCar
 from robot.real.SpeedController import SpeedController
+from robot.real.StartLightDetector import StartLightDetector
 from robot.real.SteeringController import SteeringController
 from robot.real.Tachometer import Tachometer
 from robot.real.Time import Time
+from robot.real.UsbCam import UsbCam
 from robot.real.Vesc import Vesc
 from robot.simu.Config import TACHO_COEF
 from robot.strategy.StrategyFactory import StrategyFactory
 
 RAM_DISK_DIR = "/tmp_ram"
-
-INFERENCE_DISABLE_FILE = RAM_DISK_DIR + "/inference.disable"
 
 MASK_LINE_FILE = RAM_DISK_DIR + "/mask_line.npy"
 
@@ -91,10 +92,20 @@ logger = Logger(image_analyzer=image_analyzer,
 
 strategy_factory = StrategyFactory(car, image_analyzer, logger)
 
+usb_cam = UsbCam()
+
+start_detector = StartLightDetector(detect_zone_center=(100, 100),
+                                    detect_zone_shape=(100, 100),
+                                    time=time,
+                                    usb_cam=usb_cam,
+                                    delay_seconds=0.1,
+                                    thresh=30)
+
 sequencer = Sequencer(car=car,
                       program=Programs.TEST_CIRCLE,
                       strategy_factory=strategy_factory,
-                      image_analyzer=image_analyzer)
+                      image_analyzer=image_analyzer,
+                      start_light_detector=start_detector)
 
 # Order matter, components will be executed one by one
 executable_components = [arduino,
@@ -110,8 +121,7 @@ executable_components = [arduino,
 time.sleep(1)
 try:
 
-    if Path(INFERENCE_DISABLE_FILE).is_file():
-        os.remove(INFERENCE_DISABLE_FILE)
+    enable_inference()
 
     # Time needed by the serial connections to get ready
     time.sleep(0.5)
@@ -129,7 +139,7 @@ try:
 except (KeyboardInterrupt, IndexError) as e:
     vesc.send_speed_command(0)
     logger.dump_logs()
-    open(INFERENCE_DISABLE_FILE, 'a').close()
+    disable_inference()
     print(e)
     print("\n")
     print("Exiting..")

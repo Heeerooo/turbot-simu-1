@@ -3,20 +3,18 @@ import gzip
 import os
 import pickle
 import time
-from pathlib import Path
 
 import numpy as np
 import tensorflow as tf
 from keras.models import load_model
 
+from InferenceEnable import is_inference_enabled
 from robot.real.Camera import Camera
 from robot.real.UsbCam import UsbCam
 
 MODEL_FILENAME = 'deep_learning/models/final_race_model_5_3.h5'
 
 RAM_DISK_DIR = "/tmp_ram"
-
-INFERENCE_DISABLE_FILE = RAM_DISK_DIR + "/inference.disable"
 
 MASK_LINE_FILE = RAM_DISK_DIR + "/mask_line.npy"
 
@@ -55,12 +53,13 @@ frames_to_log = []
 
 running = True
 
+usbCam.open()
 print("Running")
 while True:
     begin_time = time.time()
 
     # Check if inference is enabled
-    if Path(INFERENCE_DISABLE_FILE).is_file():
+    if is_inference_enabled():
         if running:
             usbCam.release()
             print("Wait robot to start")

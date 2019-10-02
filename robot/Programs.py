@@ -802,3 +802,24 @@ TEST_LOGS = [
         'duree': 10,
     }
 ]
+
+START_SEQUENCE = [
+    {
+        'label': 'waitGyroStable',
+        'instruction': 'tourne',
+        'display': 'WAITG',
+        'chenillard': False,
+        'positionRoues': 0,
+        'vitesse': 0,
+        'conditionFin': 'attendreGyroStable'
+    },
+    {
+        'label': 'waitStartLight',
+        'instruction': 'tourne',
+        'start_light_detector': True,
+        'display': 'WAITL',
+        'speed': 0,
+        'positionRoues': 0,
+        'conditionFin': 'waitStartLight',
+    }
+]

@@ -12,6 +12,7 @@ from robot.simu.Gyro import Gyro
 from robot.simu.SimuCar import SimuCar
 from robot.simu.Simulator import Simulator
 from robot.simu.SpeedController import SpeedController
+from robot.simu.StartLightDetector import StartLightDetector
 from robot.simu.SteeringController import SteeringController
 from robot.simu.Tachometer import Tachometer
 from robot.simu.Time import Time
@@ -82,16 +83,8 @@ image_analyzer = ImageAnalyzer(car=car,
                                log=log_enable,
                                show_and_wait=False)
 
-strategy_factory = StrategyFactory(car, image_analyzer)
-
-sequencer = Sequencer(car=car,
-                      program=Programs.TURN_OFFSET,
-                      strategy_factory=strategy_factory,
-                      image_analyzer=image_analyzer)
-
 logger = Logger(image_analyzer=image_analyzer,
                 car=car,
-                sequencer=sequencer,
                 image_warper=image_warper,
                 steering_controller=steering_controller,
                 time=simu_time,
@@ -99,6 +92,18 @@ logger = Logger(image_analyzer=image_analyzer,
                 log_persist_enable=log_enable,
                 frame_cycle_log=frame_cycle_log,
                 compress_log=compress_log)
+
+
+strategy_factory = StrategyFactory(car, image_analyzer, logger)
+
+start_light_detector = StartLightDetector()
+
+sequencer = Sequencer(car=car,
+                      program=Programs.TURN_OFFSET,
+                      strategy_factory=strategy_factory,
+                      image_analyzer=image_analyzer,
+                      start_light_detector=start_light_detector)
+
 
 # Order matter, components will be executed one by one
 executable_components = [gyro,

@@ -31,7 +31,10 @@ class Sequencer(Component):
     strategy = None
     speed = None
 
-    def __init__(self, car, program, strategy_factory, image_analyzer):
+    def __init__(self, car, program, strategy_factory, image_analyzer, start_light_detector):
+        if start_light_detector is None:
+            print("Warning no start light detector")
+        self.start_light_detector = start_light_detector
         self.strategy_factory = strategy_factory
         self.car = car
         self.program = program
@@ -111,7 +114,8 @@ class Sequencer(Component):
             'i_correction_coef'] if 'i_correction_coef' in self.current_program else 0
         cap_target = self.current_program[
             'cap_target'] if 'cap_target' in self.current_program else 0
-        self.strategy = self.strategy_factory.create_cap_offset((cap_target + self.base_gyro) % 360, speed, p_correction_coef,
+        self.strategy = self.strategy_factory.create_cap_offset((cap_target + self.base_gyro) % 360, speed,
+                                                                p_correction_coef,
                                                                 i_correction_coef)
 
     def init_turn_offset(self):
@@ -178,7 +182,8 @@ class Sequencer(Component):
             self.image_analyzer.set_lock_zone_radius(self.current_program['lock_zone_radius'])
         if 'avoidance_zone_radius' in self.current_program:
             self.image_analyzer.set_avoidance_zone_radius(self.current_program['avoidance_zone_radius'])
-
+        if 'start_light_detector' in self.current_program:
+            self.start_light_detector.start()
 
     def check_cap(self):
         final_cap_mini = self.current_program['capFinalMini']
@@ -215,13 +220,20 @@ class Sequencer(Component):
         if poly_2_coefs is None:
             return False
 
-        error_angle = angle_intersection(poly_2_coefs[0],poly_2_coefs[1],poly_2_coefs[2],
+        error_angle = angle_intersection(poly_2_coefs[0], poly_2_coefs[1], poly_2_coefs[2],
                                          self.image_analyzer.circle_poly2_intersect_radius,
                                          self.image_analyzer.final_image_height,
                                          self.image_analyzer.final_image_width)
         error_angle_deg = error_angle * RAD_TO_DEG
         print("error angle", error_angle_deg)
         return error_angle_deg > circle_angle_max
+
+    def check_start_light(self):
+        if self.start_light_detector.detect_start_light():
+            self.start_light_detector.stop()
+            return True
+        else:
+            return False
 
     def check_end_sequence(self):
         # Recupere la condition de fin
@@ -236,6 +248,7 @@ class Sequencer(Component):
             'attendBouton': self.check_button,
             'attendreGyroStable': self.check_gyro_stable,
             'circle': self.check_circle,
+            'waitStartLight': self.check_start_light
         }
 
         if end_condition not in end_conditions_check.keys():
