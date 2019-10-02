@@ -1,6 +1,7 @@
 # encoding:utf-8
 import json
 
+from InferenceEnable import disable_inference, enable_inference
 from circle import angle_intersection
 from robot.Component import Component
 
@@ -184,6 +185,7 @@ class Sequencer(Component):
             self.image_analyzer.set_avoidance_zone_radius(self.current_program['avoidance_zone_radius'])
         if 'start_light_detector' in self.current_program:
             self.start_light_detector.start()
+            disable_inference()
 
     def check_cap(self):
         final_cap_mini = self.current_program['capFinalMini']
@@ -231,6 +233,7 @@ class Sequencer(Component):
     def check_start_light(self):
         if self.start_light_detector.detect_start_light():
             self.start_light_detector.stop()
+            enable_inference()
             return True
         else:
             return False
