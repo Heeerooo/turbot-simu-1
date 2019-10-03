@@ -20,6 +20,10 @@ class StartLightDetector:
             return False
 
         current_image = self.usb_cam.read()
+        if current_image is None:
+            print("WARNING No image from cam")
+            return False
+
         start_x = round(self.detect_zone_center[0] - self.detect_zone_shape[0] / 2)
         end_x = round(self.detect_zone_center[0] + self.detect_zone_shape[0] / 2)
         start_y = round(self.detect_zone_center[1] - self.detect_zone_shape[1] / 2)
