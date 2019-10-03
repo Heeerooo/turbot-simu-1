@@ -1,4 +1,5 @@
 import os
+import time
 from pathlib import Path
 
 RAM_DISK_DIR = "/tmp_ram"
@@ -8,6 +9,7 @@ INFERENCE_DISABLE_FILE = RAM_DISK_DIR + "/inference.disable"
 
 def disable_inference():
     open(INFERENCE_DISABLE_FILE, 'a').close()
+    time.sleep(0.5)
 
 
 def is_inference_enabled():

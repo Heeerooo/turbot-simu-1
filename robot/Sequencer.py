@@ -184,8 +184,9 @@ class Sequencer(Component):
         if 'avoidance_zone_radius' in self.current_program:
             self.image_analyzer.set_avoidance_zone_radius(self.current_program['avoidance_zone_radius'])
         if 'start_light_detector' in self.current_program:
-            self.start_light_detector.start()
+            print("start detector")
             disable_inference()
+            self.start_light_detector.start()
 
     def check_cap(self):
         final_cap_mini = self.current_program['capFinalMini']

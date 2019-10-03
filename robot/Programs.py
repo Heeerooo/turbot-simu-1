@@ -821,5 +821,14 @@ START_SEQUENCE = [
         'speed': 0,
         'positionRoues': 0,
         'conditionFin': 'waitStartLight',
-    }
+    },
+    {
+        'instruction': 'circle',  # suiviImageLigneDroite ou suiviImageRoues
+        'speed': 0,
+        'p_coef': 55,
+        'clip': 150,
+        'circle_radius': 180,
+        'conditionFin': 'tacho',
+        'tacho': 100000,
+    },
 ]
